@@ -31,7 +31,7 @@ a copy of it's source is currently included.
 The app complies with [The Elm Architecture](https://github.com/evancz/elm-architecture-tutorial/),
 extended with the server communication to store the content to a Firebase.
 
-A sketch of the dataflow:
+A sketch of the data flow:
 
 - Inputs are coming from
     - Firebase query results
@@ -44,12 +44,18 @@ A sketch of the dataflow:
 - A view function renders the current model as HTML
 
 Please note that content changes made by the user always flow through the Firebase layer.
-From here they a passed down to the new model.
+From there they a passed down to the new model.
 This utilizes the fact that the Firebase library immediately reflects local writes
 without waiting for a server round trip.
 
 Firebase queues up write operations during a network outage.
 So the app will work offline and will catch up after going online again.
+
+For adding new items the app uses Firebase's
+[*push* operation](https://www.firebase.com/docs/web/api/firebase/push.html),
+which generates chronologically sorted unique ids.
+The model uses a dictionary
+to map these ids to the items' payload.
 
 ## Future Work
 
