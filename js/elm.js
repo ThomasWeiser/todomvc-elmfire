@@ -14630,10 +14630,10 @@ Elm.TodoMVC.make = function (_elm) {
                                  ,_0: _v3._0 + 1
                                  ,_1: _v3._1 + (_v2._1.completed ? 1 : 0)};}
                        _U.badCase($moduleName,
-                       "on line 389, column 12 to 66");
+                       "on line 392, column 12 to 66");
                     }();}
                _U.badCase($moduleName,
-               "on line 389, column 12 to 66");
+               "on line 392, column 12 to 66");
             }();
          }),
          {ctor: "_Tuple2",_0: 0,_1: 0},
@@ -14679,7 +14679,7 @@ Elm.TodoMVC.make = function (_elm) {
             case "SingleTask":
             return effects._0;}
          _U.badCase($moduleName,
-         "between lines 131 and 143");
+         "between lines 134 and 146");
       }();
    };
    var Never = function (a) {
@@ -14833,7 +14833,7 @@ Elm.TodoMVC.make = function (_elm) {
                               _L.fromArray([]))]));
               }();}
          _U.badCase($moduleName,
-         "between lines 467 and 508");
+         "between lines 470 and 511");
       }();
    });
    var viewItemList = F3(function (guiAddress,
@@ -14853,10 +14853,10 @@ Elm.TodoMVC.make = function (_elm) {
                           case "Completed":
                           return _v22._1.completed;}
                        _U.badCase($moduleName,
-                       "between lines 440 and 444");
+                       "between lines 443 and 447");
                     }();}
                _U.badCase($moduleName,
-               "between lines 440 and 444");
+               "between lines 443 and 447");
             }();
          };
          var visibleItemList = A2($List.filter,
@@ -15073,7 +15073,7 @@ Elm.TodoMVC.make = function (_elm) {
                case "Nothing":
                return $Task.fail({ctor: "_Tuple0"});}
             _U.badCase($moduleName,
-            "between lines 155 and 161");
+            "between lines 158 and 164");
          }();
       });
       return A2($Task.andThen,
@@ -15100,7 +15100,7 @@ Elm.TodoMVC.make = function (_elm) {
                         {case "_Tuple2":
                            return Removed(_v35._0);}
                         _U.badCase($moduleName,
-                        "on line 172, column 31 to 41");
+                        "on line 175, column 31 to 41");
                      }();
                   }),
                   doNothing,
@@ -15162,12 +15162,12 @@ Elm.TodoMVC.make = function (_elm) {
                                                     case "Nothing":
                                                     return $ElmFire.Abort;}
                                                  _U.badCase($moduleName,
-                                                 "between lines 330 and 340");
+                                                 "between lines 333 and 343");
                                               }();
                                             case "Nothing":
                                             return $ElmFire.Abort;}
                                          _U.badCase($moduleName,
-                                         "between lines 328 and 342");
+                                         "between lines 331 and 345");
                                       }();
                                    },
                                    $ElmFire.sub(key)($ElmFire.fromUrl(firebaseUrl)),
@@ -15203,18 +15203,18 @@ Elm.TodoMVC.make = function (_elm) {
                                                             case "Nothing":
                                                             return $ElmFire.Abort;}
                                                          _U.badCase($moduleName,
-                                                         "between lines 295 and 302");
+                                                         "between lines 298 and 305");
                                                       }();
                                                     case "Nothing":
                                                     return $ElmFire.Abort;}
                                                  _U.badCase($moduleName,
-                                                 "between lines 293 and 304");
+                                                 "between lines 296 and 307");
                                               }();
                                            },
                                            $ElmFire.sub(_v67._0)($ElmFire.fromUrl(firebaseUrl)),
                                            true))) : $Maybe.Nothing;}
                                       _U.badCase($moduleName,
-                                      "between lines 289 and 307");
+                                      "between lines 292 and 310");
                                    }();
                                 },
                                 $Dict.toList(_v41._0.items)))};
@@ -15312,7 +15312,7 @@ Elm.TodoMVC.make = function (_elm) {
                         ,_1: NoEffect};
               }();}
          _U.badCase($moduleName,
-         "between lines 226 and 370");
+         "between lines 229 and 373");
       }();
    });
    var state = A3($Signal.foldp,
