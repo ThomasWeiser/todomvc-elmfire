@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>TodoMVC ElmFire</title>
+		<link rel="stylesheet" href="node_modules/todomvc-common/base.css">
+		<link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
+		<!-- CSS overrides - remove if you don't need it -->
+		<link rel="stylesheet" href="css/app.css">
+		<!-- Scripts here. Don't remove ↓
+		<script src="node_modules/todomvc-common/base.js"></script> -->
+		<script src="js/elm.js"></script>
+		<script>
+			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+			ga('create', 'UA-65834974-1', 'auto');
+			ga('set', 'anonymizeIp', true);
+			ga('set', 'forceSSL', true);
+			ga('send', 'pageview');
+		</script>
+	</head>
+	<body>
+		<script>
+			var todomvc = Elm.fullscreen (Elm.TodoMVC);
+
+			todomvc.ports.runFocus.subscribe (function (selector) {
+				if (! selector)  return;
+				setTimeout(function() {
+					var nodes = document.querySelectorAll (selector);
+					if (nodes.length === 1 && document.activeElement !== nodes[0])
+						nodes[0].focus ();
+				}, 50);
+			});
+		</script>
+	</body>
+</html>
