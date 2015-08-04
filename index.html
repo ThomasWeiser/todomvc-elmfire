@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>TodoMVC ElmFire</title>
+		<link rel="stylesheet" href="css/base.css">
+		<link rel="stylesheet" href="css/index.css">
+		<script src="js/elm.js"></script>
+	</head>
+	<body>
+		<script>
+			// Start the Elm app
+			var todomvc = Elm.fullscreen (Elm.TodoMVC);
+
+			// Auxiliary JS code to set the focus to an input field
+			todomvc.ports.runFocus.subscribe (function (selector) {
+				if (! selector)  return;
+				setTimeout(function() {
+					var nodes = document.querySelectorAll (selector);
+					if (nodes.length === 1 && document.activeElement !== nodes[0])
+						nodes[0].focus ();
+				}, 50);
+			});
+		</script>
+	</body>
+</html>
