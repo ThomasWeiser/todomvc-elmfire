@@ -77,7 +77,7 @@ initialModel =
 type GuiEvent
   = NoGuiEvent
     -- operations on the item list
-  | Additem
+  | AddItem
   | UpdateItem Id
   | DeleteItem Id
   | DeleteCompletedItems
@@ -243,7 +243,7 @@ updateState action (model, _) =
       , NoEffect
       )
 
-    FromGui (Additem) ->
+    FromGui (AddItem) ->
       ( { model | addField <- "" }
       , if model.addField == ""
         then NoEffect
@@ -375,7 +375,7 @@ updateState action (model, _) =
 -----------------------------------------------------------------------
 
 -- Pre-calculate some values derived from model
--- for efficienter view code
+-- for more efficient view code
 
 type alias AugModel = {
   itemList: List (Id, Item),
@@ -428,7 +428,7 @@ viewEntry guiAddress content =
           , autofocus True
           , value content
           , on "input" targetValue (message guiAddress << EditAddField)
-          , onEnter guiAddress (Additem)
+          , onEnter guiAddress (AddItem)
           ]
         )
         []
