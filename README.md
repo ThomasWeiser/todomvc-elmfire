@@ -29,7 +29,9 @@ a copy of it's source is currently included.
 ## Architectural Overview
 
 The app complies with [The Elm Architecture](https://github.com/evancz/elm-architecture-tutorial/),
-including [Effects](http://package.elm-lang.org/packages/evancz/elm-effects/latest) to store the content to a Firebase.
+using [evancz/start-app](http://package.elm-lang.org/packages/evancz/start-app/2.0.0/)
+and [evancz/elm-effects](http://package.elm-lang.org/packages/evancz/elm-effects/1.0.0)
+for talking to the Firebase server.
 
 A sketch of the data flow:
 

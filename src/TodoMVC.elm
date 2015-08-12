@@ -24,10 +24,13 @@ import Json.Encode as JE
 import Signal exposing (Mailbox, Address, mailbox, message)
 import Task exposing (Task, andThen)
 import Effects exposing (Effects, Never)
+import StartApp
 
 import ElmFire
 
 -----------------------------------------------------------------------
+
+-- Configuration
 
 -- URL of the Firebase to use
 firebase_foreign = "https://todomvc-angular.firebaseio.com/todos"
@@ -38,6 +41,24 @@ firebase_test = "https://elmfire-todomvc.firebaseio.com/todos"
 
 -- But lets use our own
 firebaseUrl = firebase_test
+
+-----------------------------------------------------------------------
+
+config : StartApp.Config Model Action
+config =
+  { init = (initialModel, initialEffect)
+  , update = updateState
+  , view = view
+  , inputs = [Signal.map FromServer serverInput.signal]
+  }
+
+app = StartApp.start config
+
+port runEffects : Signal (Task Never ())
+port runEffects = app.tasks
+
+main : Signal Html
+main = app.html
 
 -----------------------------------------------------------------------
 
@@ -71,6 +92,11 @@ initialModel =
   , editingItem = Nothing
   }
 
+type Action
+  = FromGui GuiEvent
+  | FromServer ServerEvent
+  | FromEffect EffectEvent
+
 -----------------------------------------------------------------------
 
 -- Events originating from the user interacting with the html page
@@ -88,9 +114,6 @@ type GuiEvent
   | EditExistingItem EditingItem
   | EditAddField Content
   | SetFilter Filter
-
-guiInput : Mailbox GuiEvent
-guiInput = mailbox NoGuiEvent
 
 type alias GuiAddress = Address GuiEvent
 
@@ -118,44 +141,9 @@ effectInput = mailbox NoEffectEvent
 
 -----------------------------------------------------------------------
 
--- Wire the app together: gui events, server events, state, update and effects
-
-type Action
-  = FromGui GuiEvent
-  | FromServer ServerEvent
-  | FromEffect EffectEvent
-
-actions : Signal Action
-actions =
-  Signal.mergeMany
-    [ Signal.map FromGui guiInput.signal
-    , Signal.map FromServer serverInput.signal
-    , Signal.map FromEffect effectInput.signal
-    ]
-
-state : Signal (Model, Effects EffectEvent)
-state =
-  Signal.foldp
-    updateState
-    (initialModel, initialEffect)
-    actions
-
-model : Signal Model
-model =
-  Signal.map fst state
-
-effects : Signal (Effects EffectEvent)
-effects =
-  Signal.map snd state
-
-port runEffects : Signal (Task Never ())
-port runEffects =
-  Signal.map (Effects.toTask effectInput.address) effects
-
------------------------------------------------------------------------
-
 -- Subscribe to firebase events: adding, removing and changing items
 
+initialEffect : Effects Action
 initialEffect =
   let
     snap2task : ((Id, Item) -> ServerEvent) -> ElmFire.Snapshot -> Task () ()
@@ -202,12 +190,12 @@ decoderItem =
 -- Process gui events and server events yielding model updates and effects
 
 {- Map any task to an effect, discarding any direct result or error value -}
-kickOff : Task x a -> Effects EffectEvent
+kickOff : Task x a -> Effects Action
 kickOff =
-  Task.toMaybe >> Task.map (always NoEffectEvent) >> Effects.task
+  Task.toMaybe >> Task.map (always (FromEffect NoEffectEvent)) >> Effects.task
 
-updateState : Action -> (Model, Effects EffectEvent) -> (Model, Effects EffectEvent)
-updateState action (model, _) =
+updateState : Action -> Model -> (Model, Effects Action)
+updateState action model =
   case action of
 
     FromEffect _ ->
@@ -388,13 +376,11 @@ augment model =
 
 -----------------------------------------------------------------------
 
-main : Signal Html
-main = Signal.map (view guiInput.address) model
-
-view : GuiAddress -> Model -> Html
-view guiAddress model =
+view : Address Action -> Model -> Html
+view actionAddress model =
   let
     augModel = augment model
+    guiAddress = Signal.forwardTo actionAddress FromGui
   in
     div []
       [ section [ class "todoapp" ]
