@@ -1800,6 +1800,148 @@ Elm.Dict.make = function (_elm) {
                       ,fromList: fromList};
    return _elm.Dict.values;
 };
+Elm.Effects = Elm.Effects || {};
+Elm.Effects.make = function (_elm) {
+   "use strict";
+   _elm.Effects = _elm.Effects || {};
+   if (_elm.Effects.values)
+   return _elm.Effects.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Effects",
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Native$Effects = Elm.Native.Effects.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Task = Elm.Task.make(_elm);
+   var ignore = function (task) {
+      return A2($Task.andThen,
+      task,
+      $Basics.always($Task.succeed({ctor: "_Tuple0"})));
+   };
+   var sequence_ = function (tasks) {
+      return ignore($Task.sequence(tasks));
+   };
+   var requestAnimationFrame = $Native$Effects.requestAnimationFrame;
+   var toTaskHelp = F3(function (address,
+   _v0,
+   effect) {
+      return function () {
+         switch (_v0.ctor)
+         {case "_Tuple2":
+            return function () {
+                 switch (effect.ctor)
+                 {case "Batch":
+                    return function () {
+                         var $ = $List.unzip(A2($List.map,
+                         A2(toTaskHelp,address,_v0),
+                         effect._0)),
+                         tasks = $._0,
+                         toMsgLists = $._1;
+                         return {ctor: "_Tuple2"
+                                ,_0: sequence_(tasks)
+                                ,_1: $List.concat(toMsgLists)};
+                      }();
+                    case "None": return _v0;
+                    case "Task":
+                    return function () {
+                         var reporter = A2($Task.andThen,
+                         effect._0,
+                         $Signal.send(address));
+                         return {ctor: "_Tuple2"
+                                ,_0: A2($Task.andThen,
+                                _v0._0,
+                                $Basics.always(ignore($Task.spawn(reporter))))
+                                ,_1: _v0._1};
+                      }();
+                    case "Tick":
+                    return {ctor: "_Tuple2"
+                           ,_0: _v0._0
+                           ,_1: A2($List._op["::"],
+                           effect._0,
+                           _v0._1)};}
+                 _U.badCase($moduleName,
+                 "between lines 184 and 209");
+              }();}
+         _U.badCase($moduleName,
+         "between lines 184 and 209");
+      }();
+   });
+   var toTask = F2(function (address,
+   effect) {
+      return function () {
+         var $ = A3(toTaskHelp,
+         address,
+         {ctor: "_Tuple2"
+         ,_0: $Task.succeed({ctor: "_Tuple0"})
+         ,_1: _L.fromArray([])},
+         effect),
+         combinedTask = $._0,
+         tickMessages = $._1;
+         var animationReport = function (time) {
+            return sequence_($List.map(function (f) {
+               return A2($Signal.send,
+               address,
+               f(time));
+            })(tickMessages));
+         };
+         var animationRequests = requestAnimationFrame(animationReport);
+         return A2($Task.andThen,
+         combinedTask,
+         $Basics.always(animationRequests));
+      }();
+   });
+   var Never = function (a) {
+      return {ctor: "Never",_0: a};
+   };
+   var Batch = function (a) {
+      return {ctor: "Batch",_0: a};
+   };
+   var batch = Batch;
+   var None = {ctor: "None"};
+   var none = None;
+   var Tick = function (a) {
+      return {ctor: "Tick",_0: a};
+   };
+   var tick = Tick;
+   var Task = function (a) {
+      return {ctor: "Task",_0: a};
+   };
+   var task = Task;
+   var map = F2(function (func,
+   effect) {
+      return function () {
+         switch (effect.ctor)
+         {case "Batch":
+            return Batch(A2($List.map,
+              map(func),
+              effect._0));
+            case "None": return None;
+            case "Task":
+            return Task(A2($Task.map,
+              func,
+              effect._0));
+            case "Tick":
+            return Tick(function ($) {
+                 return func(effect._0($));
+              });}
+         _U.badCase($moduleName,
+         "between lines 136 and 147");
+      }();
+   });
+   _elm.Effects.values = {_op: _op
+                         ,none: none
+                         ,task: task
+                         ,tick: tick
+                         ,map: map
+                         ,batch: batch
+                         ,toTask: toTask};
+   return _elm.Effects.values;
+};
 Elm.ElmFire = Elm.ElmFire || {};
 Elm.ElmFire.make = function (_elm) {
    "use strict";
@@ -3830,7 +3972,7 @@ Elm.Html.Attributes.make = function (_elm) {
                       ,_0: _v0._0
                       ,_1: $Json$Encode.string(_v0._1)};}
             _U.badCase($moduleName,
-            "on line 133, column 35 to 57");
+            "on line 156, column 35 to 57");
          }();
       })(props)));
    };
@@ -3842,47 +3984,11 @@ Elm.Html.Attributes.make = function (_elm) {
    _elm.Html.Attributes.values = {_op: _op
                                  ,key: key
                                  ,style: style
-                                 ,classList: classList
-                                 ,property: property
-                                 ,stringProperty: stringProperty
-                                 ,boolProperty: boolProperty
-                                 ,attribute: attribute
                                  ,$class: $class
-                                 ,hidden: hidden
+                                 ,classList: classList
                                  ,id: id
                                  ,title: title
-                                 ,accesskey: accesskey
-                                 ,contenteditable: contenteditable
-                                 ,contextmenu: contextmenu
-                                 ,dir: dir
-                                 ,draggable: draggable
-                                 ,dropzone: dropzone
-                                 ,itemprop: itemprop
-                                 ,lang: lang
-                                 ,spellcheck: spellcheck
-                                 ,tabindex: tabindex
-                                 ,async: async
-                                 ,charset: charset
-                                 ,content: content
-                                 ,defer: defer
-                                 ,httpEquiv: httpEquiv
-                                 ,language: language
-                                 ,scoped: scoped
-                                 ,src: src
-                                 ,height: height
-                                 ,width: width
-                                 ,alt: alt
-                                 ,autoplay: autoplay
-                                 ,controls: controls
-                                 ,loop: loop
-                                 ,preload: preload
-                                 ,poster: poster
-                                 ,$default: $default
-                                 ,kind: kind
-                                 ,srclang: srclang
-                                 ,sandbox: sandbox
-                                 ,seamless: seamless
-                                 ,srcdoc: srcdoc
+                                 ,hidden: hidden
                                  ,type$: type$
                                  ,value: value
                                  ,checked: checked
@@ -3898,8 +4004,8 @@ Elm.Html.Attributes.make = function (_elm) {
                                  ,enctype: enctype
                                  ,formaction: formaction
                                  ,list: list
-                                 ,minlength: minlength
                                  ,maxlength: maxlength
+                                 ,minlength: minlength
                                  ,method: method
                                  ,multiple: multiple
                                  ,name: name
@@ -3916,14 +4022,6 @@ Elm.Html.Attributes.make = function (_elm) {
                                  ,cols: cols
                                  ,rows: rows
                                  ,wrap: wrap
-                                 ,ismap: ismap
-                                 ,usemap: usemap
-                                 ,shape: shape
-                                 ,coords: coords
-                                 ,challenge: challenge
-                                 ,keytype: keytype
-                                 ,align: align
-                                 ,cite: cite
                                  ,href: href
                                  ,target: target
                                  ,download: download
@@ -3932,15 +4030,57 @@ Elm.Html.Attributes.make = function (_elm) {
                                  ,media: media
                                  ,ping: ping
                                  ,rel: rel
-                                 ,datetime: datetime
-                                 ,pubdate: pubdate
+                                 ,ismap: ismap
+                                 ,usemap: usemap
+                                 ,shape: shape
+                                 ,coords: coords
+                                 ,src: src
+                                 ,height: height
+                                 ,width: width
+                                 ,alt: alt
+                                 ,autoplay: autoplay
+                                 ,controls: controls
+                                 ,loop: loop
+                                 ,preload: preload
+                                 ,poster: poster
+                                 ,$default: $default
+                                 ,kind: kind
+                                 ,srclang: srclang
+                                 ,sandbox: sandbox
+                                 ,seamless: seamless
+                                 ,srcdoc: srcdoc
                                  ,reversed: reversed
                                  ,start: start
+                                 ,align: align
                                  ,colspan: colspan
-                                 ,headers: headers
                                  ,rowspan: rowspan
+                                 ,headers: headers
                                  ,scope: scope
-                                 ,manifest: manifest};
+                                 ,async: async
+                                 ,charset: charset
+                                 ,content: content
+                                 ,defer: defer
+                                 ,httpEquiv: httpEquiv
+                                 ,language: language
+                                 ,scoped: scoped
+                                 ,accesskey: accesskey
+                                 ,contenteditable: contenteditable
+                                 ,contextmenu: contextmenu
+                                 ,dir: dir
+                                 ,draggable: draggable
+                                 ,dropzone: dropzone
+                                 ,itemprop: itemprop
+                                 ,lang: lang
+                                 ,spellcheck: spellcheck
+                                 ,tabindex: tabindex
+                                 ,challenge: challenge
+                                 ,keytype: keytype
+                                 ,cite: cite
+                                 ,datetime: datetime
+                                 ,pubdate: pubdate
+                                 ,manifest: manifest
+                                 ,property: property
+                                 ,attribute: attribute};
    return _elm.Html.Attributes.values;
 };
 Elm.Html = Elm.Html || {};
@@ -3975,6 +4115,14 @@ Elm.Html.Events.make = function (_elm) {
    _L.fromArray(["target"
                 ,"value"]),
    $Json$Decode.string);
+   var defaultOptions = $VirtualDom.defaultOptions;
+   var Options = F2(function (a,
+   b) {
+      return {_: {}
+             ,preventDefault: b
+             ,stopPropagation: a};
+   });
+   var onWithOptions = $VirtualDom.onWithOptions;
    var on = $VirtualDom.on;
    var messageOn = F3(function (name,
    addr,
@@ -4034,9 +4182,12 @@ Elm.Html.Events.make = function (_elm) {
                              ,onMouseOver: onMouseOver
                              ,onMouseOut: onMouseOut
                              ,on: on
+                             ,onWithOptions: onWithOptions
+                             ,defaultOptions: defaultOptions
                              ,targetValue: targetValue
                              ,targetChecked: targetChecked
-                             ,keyCode: keyCode};
+                             ,keyCode: keyCode
+                             ,Options: Options};
    return _elm.Html.Events.values;
 };
 Elm.Html = Elm.Html || {};
@@ -5891,6 +6042,36 @@ Elm.Native.Debug.make = function(localRuntime) {
 		watch: F2(watch),
 		watchSummary:F3(watchSummary),
 	};
+};
+
+Elm.Native.Effects = {};
+Elm.Native.Effects.make = function(localRuntime) {
+
+	localRuntime.Native = localRuntime.Native || {};
+	localRuntime.Native.Effects = localRuntime.Native.Effects || {};
+	if (localRuntime.Native.Effects.values)
+	{
+		return localRuntime.Native.Effects.values;
+	}
+
+	var Task = Elm.Native.Task.make(localRuntime);
+	var Utils = Elm.Native.Utils.make(localRuntime);
+
+
+	function raf(timeToTask)
+	{
+		return Task.asyncFunction(function(callback) {
+			requestAnimationFrame(function(time) {
+				Task.perform(timeToTask(time));
+			});
+			callback(Task.succeed(Utils.Tuple0));
+		});
+	}
+
+	return localRuntime.Native.Effects.values = {
+		requestAnimationFrame: raf
+	};
+
 };
 
 /* @flow */
@@ -11663,474 +11844,11 @@ Elm.Native.Utils.make = function(localRuntime) {
 };
 
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-module.exports = createHash
+var createElement = require("./vdom/create-element.js")
 
-function createHash(elem) {
-    var attributes = elem.attributes
-    var hash = {}
+module.exports = createElement
 
-    if (attributes === null || attributes === undefined) {
-        return hash
-    }
-
-    for (var i = 0; i < attributes.length; i++) {
-        var attr = attributes[i]
-
-        if (attr.name.substr(0,5) !== "data-") {
-            continue
-        }
-
-        hash[attr.name.substr(5)] = attr.value
-    }
-
-    return hash
-}
-
-},{}],2:[function(require,module,exports){
-var createStore = require("weakmap-shim/create-store")
-var Individual = require("individual")
-
-var createHash = require("./create-hash.js")
-
-var hashStore = Individual("__DATA_SET_WEAKMAP@3", createStore())
-
-module.exports = DataSet
-
-function DataSet(elem) {
-    var store = hashStore(elem)
-
-    if (!store.hash) {
-        store.hash = createHash(elem)
-    }
-
-    return store.hash
-}
-
-},{"./create-hash.js":1,"individual":3,"weakmap-shim/create-store":4}],3:[function(require,module,exports){
-(function (global){
-var root = typeof window !== 'undefined' ?
-    window : typeof global !== 'undefined' ?
-    global : {};
-
-module.exports = Individual
-
-function Individual(key, value) {
-    if (root[key]) {
-        return root[key]
-    }
-
-    Object.defineProperty(root, key, {
-        value: value
-        , configurable: true
-    })
-
-    return value
-}
-
-}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],4:[function(require,module,exports){
-var hiddenStore = require('./hidden-store.js');
-
-module.exports = createStore;
-
-function createStore() {
-    var key = {};
-
-    return function (obj) {
-        if (typeof obj !== 'object' || obj === null) {
-            throw new Error('Weakmap-shim: Key must be object')
-        }
-
-        var store = obj.valueOf(key);
-        return store && store.identity === key ?
-            store : hiddenStore(obj, key);
-    };
-}
-
-},{"./hidden-store.js":5}],5:[function(require,module,exports){
-module.exports = hiddenStore;
-
-function hiddenStore(obj, key) {
-    var store = { identity: key };
-    var valueOf = obj.valueOf;
-
-    Object.defineProperty(obj, "valueOf", {
-        value: function (value) {
-            return value !== key ?
-                valueOf.apply(this, arguments) : store;
-        },
-        writable: true
-    });
-
-    return store;
-}
-
-},{}],6:[function(require,module,exports){
-var DataSet = require("data-set")
-
-module.exports = addEvent
-
-function addEvent(target, type, handler) {
-    var ds = DataSet(target)
-    var events = ds[type]
-
-    if (!events) {
-        ds[type] = handler
-    } else if (Array.isArray(events)) {
-        if (events.indexOf(handler) === -1) {
-            events.push(handler)
-        }
-    } else if (events !== handler) {
-        ds[type] = [events, handler]
-    }
-}
-
-},{"data-set":2}],7:[function(require,module,exports){
-var globalDocument = require("global/document")
-var DataSet = require("data-set")
-var createStore = require("weakmap-shim/create-store")
-
-var addEvent = require("./add-event.js")
-var removeEvent = require("./remove-event.js")
-var ProxyEvent = require("./proxy-event.js")
-
-var HANDLER_STORE = createStore()
-
-module.exports = DOMDelegator
-
-function DOMDelegator(document) {
-    document = document || globalDocument
-
-    this.target = document.documentElement
-    this.events = {}
-    this.rawEventListeners = {}
-    this.globalListeners = {}
-}
-
-DOMDelegator.prototype.addEventListener = addEvent
-DOMDelegator.prototype.removeEventListener = removeEvent
-
-DOMDelegator.prototype.allocateHandle =
-    function allocateHandle(func) {
-        var handle = new Handle()
-
-        HANDLER_STORE(handle).func = func;
-
-        return handle
-    }
-
-DOMDelegator.prototype.transformHandle =
-    function transformHandle(handle, lambda) {
-        var func = HANDLER_STORE(handle).func
-
-        return this.allocateHandle(function (ev) {
-            var result = lambda(ev)
-            if (result) {
-                func(result)
-            }
-        })
-    }
-
-DOMDelegator.prototype.addGlobalEventListener =
-    function addGlobalEventListener(eventName, fn) {
-        var listeners = this.globalListeners[eventName] || [];
-        if (listeners.indexOf(fn) === -1) {
-            listeners.push(fn)
-        }
-
-        this.globalListeners[eventName] = listeners;
-    }
-
-DOMDelegator.prototype.removeGlobalEventListener =
-    function removeGlobalEventListener(eventName, fn) {
-        var listeners = this.globalListeners[eventName] || [];
-
-        var index = listeners.indexOf(fn)
-        if (index !== -1) {
-            listeners.splice(index, 1)
-        }
-    }
-
-DOMDelegator.prototype.listenTo = function listenTo(eventName) {
-    if (this.events[eventName]) {
-        return
-    }
-
-    this.events[eventName] = true
-
-    var listener = this.rawEventListeners[eventName]
-    if (!listener) {
-        listener = this.rawEventListeners[eventName] =
-            createHandler(eventName, this)
-    }
-
-    this.target.addEventListener(eventName, listener, true)
-}
-
-DOMDelegator.prototype.unlistenTo = function unlistenTo(eventName) {
-    if (!this.events[eventName]) {
-        return
-    }
-
-    this.events[eventName] = false
-    var listener = this.rawEventListeners[eventName]
-
-    if (!listener) {
-        throw new Error("dom-delegator#unlistenTo: cannot " +
-            "unlisten to " + eventName)
-    }
-
-    this.target.removeEventListener(eventName, listener, true)
-}
-
-function createHandler(eventName, delegator) {
-    var globalListeners = delegator.globalListeners;
-    var delegatorTarget = delegator.target;
-
-    return handler
-
-    function handler(ev) {
-        var globalHandlers = globalListeners[eventName] || []
-
-        if (globalHandlers.length > 0) {
-            var globalEvent = new ProxyEvent(ev);
-            globalEvent.currentTarget = delegatorTarget;
-            callListeners(globalHandlers, globalEvent)
-        }
-
-        findAndInvokeListeners(ev.target, ev, eventName)
-    }
-}
-
-function findAndInvokeListeners(elem, ev, eventName) {
-    var listener = getListener(elem, eventName)
-
-    if (listener && listener.handlers.length > 0) {
-        var listenerEvent = new ProxyEvent(ev);
-        listenerEvent.currentTarget = listener.currentTarget
-        callListeners(listener.handlers, listenerEvent)
-
-        if (listenerEvent._bubbles) {
-            var nextTarget = listener.currentTarget.parentNode
-            findAndInvokeListeners(nextTarget, ev, eventName)
-        }
-    }
-}
-
-function getListener(target, type) {
-    // terminate recursion if parent is `null`
-    if (target === null) {
-        return null
-    }
-
-    var ds = DataSet(target)
-    // fetch list of handler fns for this event
-    var handler = ds[type]
-    var allHandler = ds.event
-
-    if (!handler && !allHandler) {
-        return getListener(target.parentNode, type)
-    }
-
-    var handlers = [].concat(handler || [], allHandler || [])
-    return new Listener(target, handlers)
-}
-
-function callListeners(handlers, ev) {
-    handlers.forEach(function (handler) {
-        if (typeof handler === "function") {
-            handler(ev)
-        } else if (typeof handler.handleEvent === "function") {
-            handler.handleEvent(ev)
-        } else if (handler.type === "dom-delegator-handle") {
-            HANDLER_STORE(handler).func(ev)
-        } else {
-            throw new Error("dom-delegator: unknown handler " +
-                "found: " + JSON.stringify(handlers));
-        }
-    })
-}
-
-function Listener(target, handlers) {
-    this.currentTarget = target
-    this.handlers = handlers
-}
-
-function Handle() {
-    this.type = "dom-delegator-handle"
-}
-
-},{"./add-event.js":6,"./proxy-event.js":15,"./remove-event.js":16,"data-set":2,"global/document":10,"weakmap-shim/create-store":13}],8:[function(require,module,exports){
-var Individual = require("individual")
-var cuid = require("cuid")
-var globalDocument = require("global/document")
-
-var DOMDelegator = require("./dom-delegator.js")
-
-var delegatorCache = Individual("__DOM_DELEGATOR_CACHE@9", {
-    delegators: {}
-})
-var commonEvents = [
-    "blur", "change", "click",  "contextmenu", "dblclick",
-    "error","focus", "focusin", "focusout", "input", "keydown",
-    "keypress", "keyup", "load", "mousedown", "mouseup",
-    "resize", "scroll", "select", "submit", "touchcancel",
-    "touchend", "touchstart", "unload"
-]
-
-/*  Delegator is a thin wrapper around a singleton `DOMDelegator`
-        instance.
-
-    Only one DOMDelegator should exist because we do not want
-        duplicate event listeners bound to the DOM.
-
-    `Delegator` will also `listenTo()` all events unless 
-        every caller opts out of it
-*/
-module.exports = Delegator
-
-function Delegator(opts) {
-    opts = opts || {}
-    var document = opts.document || globalDocument
-
-    var cacheKey = document["__DOM_DELEGATOR_CACHE_TOKEN@9"]
-
-    if (!cacheKey) {
-        cacheKey =
-            document["__DOM_DELEGATOR_CACHE_TOKEN@9"] = cuid()
-    }
-
-    var delegator = delegatorCache.delegators[cacheKey]
-
-    if (!delegator) {
-        delegator = delegatorCache.delegators[cacheKey] =
-            new DOMDelegator(document)
-    }
-
-    if (opts.defaultEvents !== false) {
-        for (var i = 0; i < commonEvents.length; i++) {
-            delegator.listenTo(commonEvents[i])
-        }
-    }
-
-    return delegator
-}
-
-
-
-},{"./dom-delegator.js":7,"cuid":9,"global/document":10,"individual":11}],9:[function(require,module,exports){
-/**
- * cuid.js
- * Collision-resistant UID generator for browsers and node.
- * Sequential for fast db lookups and recency sorting.
- * Safe for element IDs and server-side lookups.
- *
- * Extracted from CLCTR
- * 
- * Copyright (c) Eric Elliott 2012
- * MIT License
- */
-
-/*global window, navigator, document, require, process, module */
-(function (app) {
-  'use strict';
-  var namespace = 'cuid',
-    c = 0,
-    blockSize = 4,
-    base = 36,
-    discreteValues = Math.pow(base, blockSize),
-
-    pad = function pad(num, size) {
-      var s = "000000000" + num;
-      return s.substr(s.length-size);
-    },
-
-    randomBlock = function randomBlock() {
-      return pad((Math.random() *
-            discreteValues << 0)
-            .toString(base), blockSize);
-    },
-
-    safeCounter = function () {
-      c = (c < discreteValues) ? c : 0;
-      c++; // this is not subliminal
-      return c - 1;
-    },
-
-    api = function cuid() {
-      // Starting with a lowercase letter makes
-      // it HTML element ID friendly.
-      var letter = 'c', // hard-coded allows for sequential access
-
-        // timestamp
-        // warning: this exposes the exact date and time
-        // that the uid was created.
-        timestamp = (new Date().getTime()).toString(base),
-
-        // Prevent same-machine collisions.
-        counter,
-
-        // A few chars to generate distinct ids for different
-        // clients (so different computers are far less
-        // likely to generate the same id)
-        fingerprint = api.fingerprint(),
-
-        // Grab some more chars from Math.random()
-        random = randomBlock() + randomBlock();
-
-        counter = pad(safeCounter().toString(base), blockSize);
-
-      return  (letter + timestamp + counter + fingerprint + random);
-    };
-
-  api.slug = function slug() {
-    var date = new Date().getTime().toString(36),
-      counter,
-      print = api.fingerprint().slice(0,1) +
-        api.fingerprint().slice(-1),
-      random = randomBlock().slice(-2);
-
-      counter = safeCounter().toString(36).slice(-4);
-
-    return date.slice(-2) + 
-      counter + print + random;
-  };
-
-  api.globalCount = function globalCount() {
-    // We want to cache the results of this
-    var cache = (function calc() {
-        var i,
-          count = 0;
-
-        for (i in window) {
-          count++;
-        }
-
-        return count;
-      }());
-
-    api.globalCount = function () { return cache; };
-    return cache;
-  };
-
-  api.fingerprint = function browserPrint() {
-    return pad((navigator.mimeTypes.length +
-      navigator.userAgent.length).toString(36) +
-      api.globalCount().toString(36), 4);
-  };
-
-  // don't change anything from here down.
-  if (app.register) {
-    app.register(namespace, api);
-  } else if (typeof module !== 'undefined') {
-    module.exports = api;
-  } else {
-    app[namespace] = api;
-  }
-
-}(this.applitude || this));
-
-},{}],10:[function(require,module,exports){
+},{"./vdom/create-element.js":6}],2:[function(require,module,exports){
 (function (global){
 var topLevel = typeof global !== 'undefined' ? global :
     typeof window !== 'undefined' ? window : {}
@@ -12149,141 +11867,26 @@ if (typeof document !== 'undefined') {
 }
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"min-document":40}],11:[function(require,module,exports){
-module.exports=require(3)
-},{}],12:[function(require,module,exports){
-if (typeof Object.create === 'function') {
-  // implementation from standard node.js 'util' module
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    ctor.prototype = Object.create(superCtor.prototype, {
-      constructor: {
-        value: ctor,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
-  };
-} else {
-  // old school shim for old browsers
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    var TempCtor = function () {}
-    TempCtor.prototype = superCtor.prototype
-    ctor.prototype = new TempCtor()
-    ctor.prototype.constructor = ctor
-  }
+},{"min-document":24}],3:[function(require,module,exports){
+"use strict";
+
+module.exports = function isObject(x) {
+	return typeof x === "object" && x !== null;
+};
+
+},{}],4:[function(require,module,exports){
+var nativeIsArray = Array.isArray
+var toString = Object.prototype.toString
+
+module.exports = nativeIsArray || isArray
+
+function isArray(obj) {
+    return toString.call(obj) === "[object Array]"
 }
 
-},{}],13:[function(require,module,exports){
-module.exports=require(4)
-},{"./hidden-store.js":14}],14:[function(require,module,exports){
-module.exports=require(5)
-},{}],15:[function(require,module,exports){
-var inherits = require("inherits")
-
-var ALL_PROPS = [
-    "altKey", "bubbles", "cancelable", "ctrlKey",
-    "eventPhase", "metaKey", "relatedTarget", "shiftKey",
-    "target", "timeStamp", "type", "view", "which"
-]
-var KEY_PROPS = ["char", "charCode", "key", "keyCode"]
-var MOUSE_PROPS = [
-    "button", "buttons", "clientX", "clientY", "layerX",
-    "layerY", "offsetX", "offsetY", "pageX", "pageY",
-    "screenX", "screenY", "toElement"
-]
-
-var rkeyEvent = /^key|input/
-var rmouseEvent = /^(?:mouse|pointer|contextmenu)|click/
-
-module.exports = ProxyEvent
-
-function ProxyEvent(ev) {
-    if (!(this instanceof ProxyEvent)) {
-        return new ProxyEvent(ev)
-    }
-
-    if (rkeyEvent.test(ev.type)) {
-        return new KeyEvent(ev)
-    } else if (rmouseEvent.test(ev.type)) {
-        return new MouseEvent(ev)
-    }
-
-    for (var i = 0; i < ALL_PROPS.length; i++) {
-        var propKey = ALL_PROPS[i]
-        this[propKey] = ev[propKey]
-    }
-
-    this._rawEvent = ev
-    this._bubbles = false;
-}
-
-ProxyEvent.prototype.preventDefault = function () {
-    this._rawEvent.preventDefault()
-}
-
-ProxyEvent.prototype.startPropagation = function () {
-    this._bubbles = true;
-}
-
-function MouseEvent(ev) {
-    for (var i = 0; i < ALL_PROPS.length; i++) {
-        var propKey = ALL_PROPS[i]
-        this[propKey] = ev[propKey]
-    }
-
-    for (var j = 0; j < MOUSE_PROPS.length; j++) {
-        var mousePropKey = MOUSE_PROPS[j]
-        this[mousePropKey] = ev[mousePropKey]
-    }
-
-    this._rawEvent = ev
-}
-
-inherits(MouseEvent, ProxyEvent)
-
-function KeyEvent(ev) {
-    for (var i = 0; i < ALL_PROPS.length; i++) {
-        var propKey = ALL_PROPS[i]
-        this[propKey] = ev[propKey]
-    }
-
-    for (var j = 0; j < KEY_PROPS.length; j++) {
-        var keyPropKey = KEY_PROPS[j]
-        this[keyPropKey] = ev[keyPropKey]
-    }
-
-    this._rawEvent = ev
-}
-
-inherits(KeyEvent, ProxyEvent)
-
-},{"inherits":12}],16:[function(require,module,exports){
-var DataSet = require("data-set")
-
-module.exports = removeEvent
-
-function removeEvent(target, type, handler) {
-    var ds = DataSet(target)
-    var events = ds[type]
-
-    if (!events) {
-        return
-    } else if (Array.isArray(events)) {
-        var index = events.indexOf(handler)
-        if (index !== -1) {
-            events.splice(index, 1)
-        }
-    } else if (events === handler) {
-        ds[type] = null
-    }
-}
-
-},{"data-set":2}],17:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 var isObject = require("is-object")
-var isHook = require("vtree/is-vhook")
+var isHook = require("../vnode/is-vhook.js")
 
 module.exports = applyProperties
 
@@ -12292,22 +11895,25 @@ function applyProperties(node, props, previous) {
         var propValue = props[propName]
 
         if (propValue === undefined) {
-            removeProperty(node, props, previous, propName);
+            removeProperty(node, propName, propValue, previous);
         } else if (isHook(propValue)) {
-            propValue.hook(node,
-                propName,
-                previous ? previous[propName] : undefined)
+            removeProperty(node, propName, propValue, previous)
+            if (propValue.hook) {
+                propValue.hook(node,
+                    propName,
+                    previous ? previous[propName] : undefined)
+            }
         } else {
             if (isObject(propValue)) {
                 patchObject(node, props, previous, propName, propValue);
-            } else if (propValue !== undefined) {
+            } else {
                 node[propName] = propValue
             }
         }
     }
 }
 
-function removeProperty(node, props, previous, propName) {
+function removeProperty(node, propName, propValue, previous) {
     if (previous) {
         var previousValue = previous[propName]
 
@@ -12325,6 +11931,8 @@ function removeProperty(node, props, previous, propName) {
             } else {
                 node[propName] = null
             }
+        } else if (previousValue.unhook) {
+            previousValue.unhook(node, propName, propValue)
         }
     }
 }
@@ -12375,15 +11983,15 @@ function getPrototype(value) {
     }
 }
 
-},{"is-object":21,"vtree/is-vhook":29}],18:[function(require,module,exports){
+},{"../vnode/is-vhook.js":13,"is-object":3}],6:[function(require,module,exports){
 var document = require("global/document")
 
 var applyProperties = require("./apply-properties")
 
-var isVNode = require("vtree/is-vnode")
-var isVText = require("vtree/is-vtext")
-var isWidget = require("vtree/is-widget")
-var handleThunk = require("vtree/handle-thunk")
+var isVNode = require("../vnode/is-vnode.js")
+var isVText = require("../vnode/is-vtext.js")
+var isWidget = require("../vnode/is-widget.js")
+var handleThunk = require("../vnode/handle-thunk.js")
 
 module.exports = createElement
 
@@ -12423,7 +12031,7 @@ function createElement(vnode, opts) {
     return node
 }
 
-},{"./apply-properties":17,"global/document":20,"vtree/handle-thunk":27,"vtree/is-vnode":30,"vtree/is-vtext":31,"vtree/is-widget":32}],19:[function(require,module,exports){
+},{"../vnode/handle-thunk.js":11,"../vnode/is-vnode.js":14,"../vnode/is-vtext.js":15,"../vnode/is-widget.js":16,"./apply-properties":5,"global/document":2}],7:[function(require,module,exports){
 // Maps a virtual DOM tree onto a real DOM tree in an efficient manner.
 // We don't want to read all of the DOM nodes in the tree so we use
 // the in-order tree indexing to eliminate recursion down certain branches.
@@ -12510,30 +12118,11 @@ function ascending(a, b) {
     return a > b ? 1 : -1
 }
 
-},{}],20:[function(require,module,exports){
-module.exports=require(10)
-},{"min-document":40}],21:[function(require,module,exports){
-module.exports = isObject
-
-function isObject(x) {
-    return typeof x === "object" && x !== null
-}
-
-},{}],22:[function(require,module,exports){
-var nativeIsArray = Array.isArray
-var toString = Object.prototype.toString
-
-module.exports = nativeIsArray || isArray
-
-function isArray(obj) {
-    return toString.call(obj) === "[object Array]"
-}
-
-},{}],23:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 var applyProperties = require("./apply-properties")
 
-var isWidget = require("vtree/is-widget")
-var VPatch = require("vtree/vpatch")
+var isWidget = require("../vnode/is-widget.js")
+var VPatch = require("../vnode/vpatch.js")
 
 var render = require("./create-element")
 var updateWidget = require("./update-widget")
@@ -12602,42 +12191,44 @@ function stringPatch(domNode, leftVNode, vText, renderOptions) {
         var parentNode = domNode.parentNode
         newNode = render(vText, renderOptions)
 
-        if (parentNode) {
+        if (parentNode && newNode !== domNode) {
             parentNode.replaceChild(newNode, domNode)
         }
     }
-
-    destroyWidget(domNode, leftVNode)
 
     return newNode
 }
 
 function widgetPatch(domNode, leftVNode, widget, renderOptions) {
-    if (updateWidget(leftVNode, widget)) {
-        return widget.update(leftVNode, domNode) || domNode
+    var updating = updateWidget(leftVNode, widget)
+    var newNode
+
+    if (updating) {
+        newNode = widget.update(leftVNode, domNode) || domNode
+    } else {
+        newNode = render(widget, renderOptions)
     }
 
     var parentNode = domNode.parentNode
-    var newWidget = render(widget, renderOptions)
 
-    if (parentNode) {
-        parentNode.replaceChild(newWidget, domNode)
+    if (parentNode && newNode !== domNode) {
+        parentNode.replaceChild(newNode, domNode)
     }
 
-    destroyWidget(domNode, leftVNode)
+    if (!updating) {
+        destroyWidget(domNode, leftVNode)
+    }
 
-    return newWidget
+    return newNode
 }
 
 function vNodePatch(domNode, leftVNode, vNode, renderOptions) {
     var parentNode = domNode.parentNode
     var newNode = render(vNode, renderOptions)
 
-    if (parentNode) {
+    if (parentNode && newNode !== domNode) {
         parentNode.replaceChild(newNode, domNode)
     }
-
-    destroyWidget(domNode, leftVNode)
 
     return newNode
 }
@@ -12648,58 +12239,40 @@ function destroyWidget(domNode, w) {
     }
 }
 
-function reorderChildren(domNode, bIndex) {
-    var children = []
+function reorderChildren(domNode, moves) {
     var childNodes = domNode.childNodes
-    var len = childNodes.length
-    var i
-    var reverseIndex = bIndex.reverse
+    var keyMap = {}
+    var node
+    var remove
+    var insert
 
-    for (i = 0; i < len; i++) {
-        children.push(domNode.childNodes[i])
+    for (var i = 0; i < moves.removes.length; i++) {
+        remove = moves.removes[i]
+        node = childNodes[remove.from]
+        if (remove.key) {
+            keyMap[remove.key] = node
+        }
+        domNode.removeChild(node)
     }
 
-    var insertOffset = 0
-    var move
-    var node
-    var insertNode
-    for (i = 0; i < len; i++) {
-        move = bIndex[i]
-        if (move !== undefined && move !== i) {
-            // the element currently at this index will be moved later so increase the insert offset
-            if (reverseIndex[i] > i) {
-                insertOffset++
-            }
-
-            node = children[move]
-            insertNode = childNodes[i + insertOffset] || null
-            if (node !== insertNode) {
-                domNode.insertBefore(node, insertNode)
-            }
-
-            // the moved element came from the front of the array so reduce the insert offset
-            if (move < i) {
-                insertOffset--
-            }
-        }
-
-        // element at this index is scheduled to be removed so increase insert offset
-        if (i in bIndex.removes) {
-            insertOffset++
-        }
+    var length = childNodes.length
+    for (var j = 0; j < moves.inserts.length; j++) {
+        insert = moves.inserts[j]
+        node = keyMap[insert.key]
+        // this is the weirdest bug i've ever seen in webkit
+        domNode.insertBefore(node, insert.to >= length++ ? null : childNodes[insert.to])
     }
 }
 
 function replaceRoot(oldRoot, newRoot) {
     if (oldRoot && newRoot && oldRoot !== newRoot && oldRoot.parentNode) {
-        console.log(oldRoot)
         oldRoot.parentNode.replaceChild(newRoot, oldRoot)
     }
 
     return newRoot;
 }
 
-},{"./apply-properties":17,"./create-element":18,"./update-widget":25,"vtree/is-widget":32,"vtree/vpatch":37}],24:[function(require,module,exports){
+},{"../vnode/is-widget.js":16,"../vnode/vpatch.js":19,"./apply-properties":5,"./create-element":6,"./update-widget":10}],9:[function(require,module,exports){
 var document = require("global/document")
 var isArray = require("x-is-array")
 
@@ -12777,8 +12350,8 @@ function patchIndices(patches) {
     return indices
 }
 
-},{"./dom-index":19,"./patch-op":23,"global/document":20,"x-is-array":22}],25:[function(require,module,exports){
-var isWidget = require("vtree/is-widget")
+},{"./dom-index":7,"./patch-op":8,"global/document":2,"x-is-array":4}],10:[function(require,module,exports){
+var isWidget = require("../vnode/is-widget.js")
 
 module.exports = updateWidget
 
@@ -12794,353 +12367,7 @@ function updateWidget(a, b) {
     return false
 }
 
-},{"vtree/is-widget":32}],26:[function(require,module,exports){
-var isArray = require("x-is-array")
-var isObject = require("is-object")
-
-var VPatch = require("./vpatch")
-var isVNode = require("./is-vnode")
-var isVText = require("./is-vtext")
-var isWidget = require("./is-widget")
-var isThunk = require("./is-thunk")
-var handleThunk = require("./handle-thunk")
-
-module.exports = diff
-
-function diff(a, b) {
-    var patch = { a: a }
-    walk(a, b, patch, 0)
-    return patch
-}
-
-function walk(a, b, patch, index) {
-    if (a === b) {
-        if (isThunk(a) || isThunk(b)) {
-            thunks(a, b, patch, index)
-        } else {
-            hooks(b, patch, index)
-        }
-        return
-    }
-
-    var apply = patch[index]
-
-    if (b == null) {
-        apply = appendPatch(apply, new VPatch(VPatch.REMOVE, a, b))
-        destroyWidgets(a, patch, index)
-    } else if (isThunk(a) || isThunk(b)) {
-        thunks(a, b, patch, index)
-    } else if (isVNode(b)) {
-        if (isVNode(a)) {
-            if (a.tagName === b.tagName &&
-                a.namespace === b.namespace &&
-                a.key === b.key) {
-                var propsPatch = diffProps(a.properties, b.properties, b.hooks)
-                if (propsPatch) {
-                    apply = appendPatch(apply,
-                        new VPatch(VPatch.PROPS, a, propsPatch))
-                }
-                apply = diffChildren(a, b, patch, apply, index)
-            } else {
-                apply = appendPatch(apply, new VPatch(VPatch.VNODE, a, b))
-                destroyWidgets(a, patch, index)
-            }
-        } else {
-            apply = appendPatch(apply, new VPatch(VPatch.VNODE, a, b))
-            destroyWidgets(a, patch, index)
-        }
-    } else if (isVText(b)) {
-        if (!isVText(a)) {
-            apply = appendPatch(apply, new VPatch(VPatch.VTEXT, a, b))
-            destroyWidgets(a, patch, index)
-        } else if (a.text !== b.text) {
-            apply = appendPatch(apply, new VPatch(VPatch.VTEXT, a, b))
-        }
-    } else if (isWidget(b)) {
-        apply = appendPatch(apply, new VPatch(VPatch.WIDGET, a, b))
-
-        if (!isWidget(a)) {
-            destroyWidgets(a, patch, index)
-        }
-    }
-
-    if (apply) {
-        patch[index] = apply
-    }
-}
-
-function diffProps(a, b, hooks) {
-    var diff
-
-    for (var aKey in a) {
-        if (!(aKey in b)) {
-            diff = diff || {}
-            diff[aKey] = undefined
-        }
-
-        var aValue = a[aKey]
-        var bValue = b[aKey]
-
-        if (hooks && aKey in hooks) {
-            diff = diff || {}
-            diff[aKey] = bValue
-        } else {
-            if (isObject(aValue) && isObject(bValue)) {
-                if (getPrototype(bValue) !== getPrototype(aValue)) {
-                    diff = diff || {}
-                    diff[aKey] = bValue
-                } else {
-                    var objectDiff = diffProps(aValue, bValue)
-                    if (objectDiff) {
-                        diff = diff || {}
-                        diff[aKey] = objectDiff
-                    }
-                }
-            } else if (aValue !== bValue) {
-                diff = diff || {}
-                diff[aKey] = bValue
-            }
-        }
-    }
-
-    for (var bKey in b) {
-        if (!(bKey in a)) {
-            diff = diff || {}
-            diff[bKey] = b[bKey]
-        }
-    }
-
-    return diff
-}
-
-function getPrototype(value) {
-    if (Object.getPrototypeOf) {
-        return Object.getPrototypeOf(value)
-    } else if (value.__proto__) {
-        return value.__proto__
-    } else if (value.constructor) {
-        return value.constructor.prototype
-    }
-}
-
-function diffChildren(a, b, patch, apply, index) {
-    var aChildren = a.children
-    var bChildren = reorder(aChildren, b.children)
-
-    var aLen = aChildren.length
-    var bLen = bChildren.length
-    var len = aLen > bLen ? aLen : bLen
-
-    for (var i = 0; i < len; i++) {
-        var leftNode = aChildren[i]
-        var rightNode = bChildren[i]
-        index += 1
-
-        if (!leftNode) {
-            if (rightNode) {
-                // Excess nodes in b need to be added
-                apply = appendPatch(apply,
-                    new VPatch(VPatch.INSERT, null, rightNode))
-            }
-        } else if (!rightNode) {
-            if (leftNode) {
-                // Excess nodes in a need to be removed
-                patch[index] = new VPatch(VPatch.REMOVE, leftNode, null)
-                destroyWidgets(leftNode, patch, index)
-            }
-        } else {
-            walk(leftNode, rightNode, patch, index)
-        }
-
-        if (isVNode(leftNode) && leftNode.count) {
-            index += leftNode.count
-        }
-    }
-
-    if (bChildren.moves) {
-        // Reorder nodes last
-        apply = appendPatch(apply, new VPatch(VPatch.ORDER, a, bChildren.moves))
-    }
-
-    return apply
-}
-
-// Patch records for all destroyed widgets must be added because we need
-// a DOM node reference for the destroy function
-function destroyWidgets(vNode, patch, index) {
-    if (isWidget(vNode)) {
-        if (typeof vNode.destroy === "function") {
-            patch[index] = new VPatch(VPatch.REMOVE, vNode, null)
-        }
-    } else if (isVNode(vNode) && vNode.hasWidgets) {
-        var children = vNode.children
-        var len = children.length
-        for (var i = 0; i < len; i++) {
-            var child = children[i]
-            index += 1
-
-            destroyWidgets(child, patch, index)
-
-            if (isVNode(child) && child.count) {
-                index += child.count
-            }
-        }
-    }
-}
-
-// Create a sub-patch for thunks
-function thunks(a, b, patch, index) {
-    var nodes = handleThunk(a, b);
-    var thunkPatch = diff(nodes.a, nodes.b)
-    if (hasPatches(thunkPatch)) {
-        patch[index] = new VPatch(VPatch.THUNK, null, thunkPatch)
-    }
-}
-
-function hasPatches(patch) {
-    for (var index in patch) {
-        if (index !== "a") {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-// Execute hooks when two nodes are identical
-function hooks(vNode, patch, index) {
-    if (isVNode(vNode)) {
-        if (vNode.hooks) {
-            patch[index] = new VPatch(VPatch.PROPS, vNode.hooks, vNode.hooks)
-        }
-
-        if (vNode.descendantHooks) {
-            var children = vNode.children
-            var len = children.length
-            for (var i = 0; i < len; i++) {
-                var child = children[i]
-                index += 1
-
-                hooks(child, patch, index)
-
-                if (isVNode(child) && child.count) {
-                    index += child.count
-                }
-            }
-        }
-    }
-}
-
-// List diff, naive left to right reordering
-function reorder(aChildren, bChildren) {
-
-    var bKeys = keyIndex(bChildren)
-
-    if (!bKeys) {
-        return bChildren
-    }
-
-    var aKeys = keyIndex(aChildren)
-
-    if (!aKeys) {
-        return bChildren
-    }
-
-    var bMatch = {}, aMatch = {}
-
-    for (var key in bKeys) {
-        bMatch[bKeys[key]] = aKeys[key]
-    }
-
-    for (var key in aKeys) {
-        aMatch[aKeys[key]] = bKeys[key]
-    }
-
-    var aLen = aChildren.length
-    var bLen = bChildren.length
-    var len = aLen > bLen ? aLen : bLen
-    var shuffle = []
-    var freeIndex = 0
-    var i = 0
-    var moveIndex = 0
-    var moves = {}
-    var removes = moves.removes = {}
-    var reverse = moves.reverse = {}
-    var hasMoves = false
-
-    while (freeIndex < len) {
-        var move = aMatch[i]
-        if (move !== undefined) {
-            shuffle[i] = bChildren[move]
-            if (move !== moveIndex) {
-                moves[move] = moveIndex
-                reverse[moveIndex] = move
-                hasMoves = true
-            }
-            moveIndex++
-        } else if (i in aMatch) {
-            shuffle[i] = undefined
-            removes[i] = moveIndex++
-            hasMoves = true
-        } else {
-            while (bMatch[freeIndex] !== undefined) {
-                freeIndex++
-            }
-
-            if (freeIndex < len) {
-                var freeChild = bChildren[freeIndex]
-                if (freeChild) {
-                    shuffle[i] = freeChild
-                    if (freeIndex !== moveIndex) {
-                        hasMoves = true
-                        moves[freeIndex] = moveIndex
-                        reverse[moveIndex] = freeIndex
-                    }
-                    moveIndex++
-                }
-                freeIndex++
-            }
-        }
-        i++
-    }
-
-    if (hasMoves) {
-        shuffle.moves = moves
-    }
-
-    return shuffle
-}
-
-function keyIndex(children) {
-    var i, keys
-
-    for (i = 0; i < children.length; i++) {
-        var child = children[i]
-
-        if (child.key !== undefined) {
-            keys = keys || {}
-            keys[child.key] = i
-        }
-    }
-
-    return keys
-}
-
-function appendPatch(apply, patch) {
-    if (apply) {
-        if (isArray(apply)) {
-            apply.push(patch)
-        } else {
-            apply = [apply, patch]
-        }
-
-        return apply
-    } else {
-        return patch
-    }
-}
-
-},{"./handle-thunk":27,"./is-thunk":28,"./is-vnode":30,"./is-vtext":31,"./is-widget":32,"./vpatch":37,"is-object":33,"x-is-array":34}],27:[function(require,module,exports){
+},{"../vnode/is-widget.js":16}],11:[function(require,module,exports){
 var isVNode = require("./is-vnode")
 var isVText = require("./is-vtext")
 var isWidget = require("./is-widget")
@@ -13182,22 +12409,23 @@ function renderThunk(thunk, previous) {
     return renderedThunk
 }
 
-},{"./is-thunk":28,"./is-vnode":30,"./is-vtext":31,"./is-widget":32}],28:[function(require,module,exports){
+},{"./is-thunk":12,"./is-vnode":14,"./is-vtext":15,"./is-widget":16}],12:[function(require,module,exports){
 module.exports = isThunk
 
 function isThunk(t) {
     return t && t.type === "Thunk"
 }
 
-},{}],29:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 module.exports = isHook
 
 function isHook(hook) {
-    return hook && typeof hook.hook === "function" &&
-        !hook.hasOwnProperty("hook")
+    return hook &&
+      (typeof hook.hook === "function" && !hook.hasOwnProperty("hook") ||
+       typeof hook.unhook === "function" && !hook.hasOwnProperty("unhook"))
 }
 
-},{}],30:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var version = require("./version")
 
 module.exports = isVirtualNode
@@ -13206,7 +12434,7 @@ function isVirtualNode(x) {
     return x && x.type === "VirtualNode" && x.version === version
 }
 
-},{"./version":35}],31:[function(require,module,exports){
+},{"./version":17}],15:[function(require,module,exports){
 var version = require("./version")
 
 module.exports = isVirtualText
@@ -13215,24 +12443,21 @@ function isVirtualText(x) {
     return x && x.type === "VirtualText" && x.version === version
 }
 
-},{"./version":35}],32:[function(require,module,exports){
+},{"./version":17}],16:[function(require,module,exports){
 module.exports = isWidget
 
 function isWidget(w) {
     return w && w.type === "Widget"
 }
 
-},{}],33:[function(require,module,exports){
-module.exports=require(21)
-},{}],34:[function(require,module,exports){
-module.exports=require(22)
-},{}],35:[function(require,module,exports){
-module.exports = "1"
+},{}],17:[function(require,module,exports){
+module.exports = "2"
 
-},{}],36:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 var version = require("./version")
 var isVNode = require("./is-vnode")
 var isWidget = require("./is-widget")
+var isThunk = require("./is-thunk")
 var isVHook = require("./is-vhook")
 
 module.exports = VirtualNode
@@ -13250,13 +12475,14 @@ function VirtualNode(tagName, properties, children, key, namespace) {
     var count = (children && children.length) || 0
     var descendants = 0
     var hasWidgets = false
+    var hasThunks = false
     var descendantHooks = false
     var hooks
 
     for (var propName in properties) {
         if (properties.hasOwnProperty(propName)) {
             var property = properties[propName]
-            if (isVHook(property)) {
+            if (isVHook(property) && property.unhook) {
                 if (!hooks) {
                     hooks = {}
                 }
@@ -13275,6 +12501,10 @@ function VirtualNode(tagName, properties, children, key, namespace) {
                 hasWidgets = true
             }
 
+            if (!hasThunks && child.hasThunks) {
+                hasThunks = true
+            }
+
             if (!descendantHooks && (child.hooks || child.descendantHooks)) {
                 descendantHooks = true
             }
@@ -13282,11 +12512,14 @@ function VirtualNode(tagName, properties, children, key, namespace) {
             if (typeof child.destroy === "function") {
                 hasWidgets = true
             }
+        } else if (!hasThunks && isThunk(child)) {
+            hasThunks = true;
         }
     }
 
     this.count = count + descendants
     this.hasWidgets = hasWidgets
+    this.hasThunks = hasThunks
     this.hooks = hooks
     this.descendantHooks = descendantHooks
 }
@@ -13294,7 +12527,7 @@ function VirtualNode(tagName, properties, children, key, namespace) {
 VirtualNode.prototype.version = version
 VirtualNode.prototype.type = "VirtualNode"
 
-},{"./is-vhook":29,"./is-vnode":30,"./is-widget":32,"./version":35}],37:[function(require,module,exports){
+},{"./is-thunk":12,"./is-vhook":13,"./is-vnode":14,"./is-widget":16,"./version":17}],19:[function(require,module,exports){
 var version = require("./version")
 
 VirtualPatch.NONE = 0
@@ -13318,7 +12551,7 @@ function VirtualPatch(type, vNode, patch) {
 VirtualPatch.prototype.version = version
 VirtualPatch.prototype.type = "VirtualPatch"
 
-},{"./version":35}],38:[function(require,module,exports){
+},{"./version":17}],20:[function(require,module,exports){
 var version = require("./version")
 
 module.exports = VirtualText
@@ -13330,16 +12563,503 @@ function VirtualText(text) {
 VirtualText.prototype.version = version
 VirtualText.prototype.type = "VirtualText"
 
-},{"./version":35}],39:[function(require,module,exports){
+},{"./version":17}],21:[function(require,module,exports){
+var isObject = require("is-object")
+var isHook = require("../vnode/is-vhook")
 
-var VNode = require('vtree/vnode');
-var VText = require('vtree/vtext');
-var diff = require('vtree/diff');
-var patch = require('vdom/patch');
-var createElement = require('vdom/create-element');
-var DataSet = require("data-set");
-var Delegator = require("dom-delegator");
-var isHook = require("vtree/is-vhook");
+module.exports = diffProps
+
+function diffProps(a, b) {
+    var diff
+
+    for (var aKey in a) {
+        if (!(aKey in b)) {
+            diff = diff || {}
+            diff[aKey] = undefined
+        }
+
+        var aValue = a[aKey]
+        var bValue = b[aKey]
+
+        if (aValue === bValue) {
+            continue
+        } else if (isObject(aValue) && isObject(bValue)) {
+            if (getPrototype(bValue) !== getPrototype(aValue)) {
+                diff = diff || {}
+                diff[aKey] = bValue
+            } else if (isHook(bValue)) {
+                 diff = diff || {}
+                 diff[aKey] = bValue
+            } else {
+                var objectDiff = diffProps(aValue, bValue)
+                if (objectDiff) {
+                    diff = diff || {}
+                    diff[aKey] = objectDiff
+                }
+            }
+        } else {
+            diff = diff || {}
+            diff[aKey] = bValue
+        }
+    }
+
+    for (var bKey in b) {
+        if (!(bKey in a)) {
+            diff = diff || {}
+            diff[bKey] = b[bKey]
+        }
+    }
+
+    return diff
+}
+
+function getPrototype(value) {
+  if (Object.getPrototypeOf) {
+    return Object.getPrototypeOf(value)
+  } else if (value.__proto__) {
+    return value.__proto__
+  } else if (value.constructor) {
+    return value.constructor.prototype
+  }
+}
+
+},{"../vnode/is-vhook":13,"is-object":3}],22:[function(require,module,exports){
+var isArray = require("x-is-array")
+
+var VPatch = require("../vnode/vpatch")
+var isVNode = require("../vnode/is-vnode")
+var isVText = require("../vnode/is-vtext")
+var isWidget = require("../vnode/is-widget")
+var isThunk = require("../vnode/is-thunk")
+var handleThunk = require("../vnode/handle-thunk")
+
+var diffProps = require("./diff-props")
+
+module.exports = diff
+
+function diff(a, b) {
+    var patch = { a: a }
+    walk(a, b, patch, 0)
+    return patch
+}
+
+function walk(a, b, patch, index) {
+    if (a === b) {
+        return
+    }
+
+    var apply = patch[index]
+    var applyClear = false
+
+    if (isThunk(a) || isThunk(b)) {
+        thunks(a, b, patch, index)
+    } else if (b == null) {
+
+        // If a is a widget we will add a remove patch for it
+        // Otherwise any child widgets/hooks must be destroyed.
+        // This prevents adding two remove patches for a widget.
+        if (!isWidget(a)) {
+            clearState(a, patch, index)
+            apply = patch[index]
+        }
+
+        apply = appendPatch(apply, new VPatch(VPatch.REMOVE, a, b))
+    } else if (isVNode(b)) {
+        if (isVNode(a)) {
+            if (a.tagName === b.tagName &&
+                a.namespace === b.namespace &&
+                a.key === b.key) {
+                var propsPatch = diffProps(a.properties, b.properties)
+                if (propsPatch) {
+                    apply = appendPatch(apply,
+                        new VPatch(VPatch.PROPS, a, propsPatch))
+                }
+                apply = diffChildren(a, b, patch, apply, index)
+            } else {
+                apply = appendPatch(apply, new VPatch(VPatch.VNODE, a, b))
+                applyClear = true
+            }
+        } else {
+            apply = appendPatch(apply, new VPatch(VPatch.VNODE, a, b))
+            applyClear = true
+        }
+    } else if (isVText(b)) {
+        if (!isVText(a)) {
+            apply = appendPatch(apply, new VPatch(VPatch.VTEXT, a, b))
+            applyClear = true
+        } else if (a.text !== b.text) {
+            apply = appendPatch(apply, new VPatch(VPatch.VTEXT, a, b))
+        }
+    } else if (isWidget(b)) {
+        if (!isWidget(a)) {
+            applyClear = true
+        }
+
+        apply = appendPatch(apply, new VPatch(VPatch.WIDGET, a, b))
+    }
+
+    if (apply) {
+        patch[index] = apply
+    }
+
+    if (applyClear) {
+        clearState(a, patch, index)
+    }
+}
+
+function diffChildren(a, b, patch, apply, index) {
+    var aChildren = a.children
+    var orderedSet = reorder(aChildren, b.children)
+    var bChildren = orderedSet.children
+
+    var aLen = aChildren.length
+    var bLen = bChildren.length
+    var len = aLen > bLen ? aLen : bLen
+
+    for (var i = 0; i < len; i++) {
+        var leftNode = aChildren[i]
+        var rightNode = bChildren[i]
+        index += 1
+
+        if (!leftNode) {
+            if (rightNode) {
+                // Excess nodes in b need to be added
+                apply = appendPatch(apply,
+                    new VPatch(VPatch.INSERT, null, rightNode))
+            }
+        } else {
+            walk(leftNode, rightNode, patch, index)
+        }
+
+        if (isVNode(leftNode) && leftNode.count) {
+            index += leftNode.count
+        }
+    }
+
+    if (orderedSet.moves) {
+        // Reorder nodes last
+        apply = appendPatch(apply, new VPatch(
+            VPatch.ORDER,
+            a,
+            orderedSet.moves
+        ))
+    }
+
+    return apply
+}
+
+function clearState(vNode, patch, index) {
+    // TODO: Make this a single walk, not two
+    unhook(vNode, patch, index)
+    destroyWidgets(vNode, patch, index)
+}
+
+// Patch records for all destroyed widgets must be added because we need
+// a DOM node reference for the destroy function
+function destroyWidgets(vNode, patch, index) {
+    if (isWidget(vNode)) {
+        if (typeof vNode.destroy === "function") {
+            patch[index] = appendPatch(
+                patch[index],
+                new VPatch(VPatch.REMOVE, vNode, null)
+            )
+        }
+    } else if (isVNode(vNode) && (vNode.hasWidgets || vNode.hasThunks)) {
+        var children = vNode.children
+        var len = children.length
+        for (var i = 0; i < len; i++) {
+            var child = children[i]
+            index += 1
+
+            destroyWidgets(child, patch, index)
+
+            if (isVNode(child) && child.count) {
+                index += child.count
+            }
+        }
+    } else if (isThunk(vNode)) {
+        thunks(vNode, null, patch, index)
+    }
+}
+
+// Create a sub-patch for thunks
+function thunks(a, b, patch, index) {
+    var nodes = handleThunk(a, b)
+    var thunkPatch = diff(nodes.a, nodes.b)
+    if (hasPatches(thunkPatch)) {
+        patch[index] = new VPatch(VPatch.THUNK, null, thunkPatch)
+    }
+}
+
+function hasPatches(patch) {
+    for (var index in patch) {
+        if (index !== "a") {
+            return true
+        }
+    }
+
+    return false
+}
+
+// Execute hooks when two nodes are identical
+function unhook(vNode, patch, index) {
+    if (isVNode(vNode)) {
+        if (vNode.hooks) {
+            patch[index] = appendPatch(
+                patch[index],
+                new VPatch(
+                    VPatch.PROPS,
+                    vNode,
+                    undefinedKeys(vNode.hooks)
+                )
+            )
+        }
+
+        if (vNode.descendantHooks || vNode.hasThunks) {
+            var children = vNode.children
+            var len = children.length
+            for (var i = 0; i < len; i++) {
+                var child = children[i]
+                index += 1
+
+                unhook(child, patch, index)
+
+                if (isVNode(child) && child.count) {
+                    index += child.count
+                }
+            }
+        }
+    } else if (isThunk(vNode)) {
+        thunks(vNode, null, patch, index)
+    }
+}
+
+function undefinedKeys(obj) {
+    var result = {}
+
+    for (var key in obj) {
+        result[key] = undefined
+    }
+
+    return result
+}
+
+// List diff, naive left to right reordering
+function reorder(aChildren, bChildren) {
+    // O(M) time, O(M) memory
+    var bChildIndex = keyIndex(bChildren)
+    var bKeys = bChildIndex.keys
+    var bFree = bChildIndex.free
+
+    if (bFree.length === bChildren.length) {
+        return {
+            children: bChildren,
+            moves: null
+        }
+    }
+
+    // O(N) time, O(N) memory
+    var aChildIndex = keyIndex(aChildren)
+    var aKeys = aChildIndex.keys
+    var aFree = aChildIndex.free
+
+    if (aFree.length === aChildren.length) {
+        return {
+            children: bChildren,
+            moves: null
+        }
+    }
+
+    // O(MAX(N, M)) memory
+    var newChildren = []
+
+    var freeIndex = 0
+    var freeCount = bFree.length
+    var deletedItems = 0
+
+    // Iterate through a and match a node in b
+    // O(N) time,
+    for (var i = 0 ; i < aChildren.length; i++) {
+        var aItem = aChildren[i]
+        var itemIndex
+
+        if (aItem.key) {
+            if (bKeys.hasOwnProperty(aItem.key)) {
+                // Match up the old keys
+                itemIndex = bKeys[aItem.key]
+                newChildren.push(bChildren[itemIndex])
+
+            } else {
+                // Remove old keyed items
+                itemIndex = i - deletedItems++
+                newChildren.push(null)
+            }
+        } else {
+            // Match the item in a with the next free item in b
+            if (freeIndex < freeCount) {
+                itemIndex = bFree[freeIndex++]
+                newChildren.push(bChildren[itemIndex])
+            } else {
+                // There are no free items in b to match with
+                // the free items in a, so the extra free nodes
+                // are deleted.
+                itemIndex = i - deletedItems++
+                newChildren.push(null)
+            }
+        }
+    }
+
+    var lastFreeIndex = freeIndex >= bFree.length ?
+        bChildren.length :
+        bFree[freeIndex]
+
+    // Iterate through b and append any new keys
+    // O(M) time
+    for (var j = 0; j < bChildren.length; j++) {
+        var newItem = bChildren[j]
+
+        if (newItem.key) {
+            if (!aKeys.hasOwnProperty(newItem.key)) {
+                // Add any new keyed items
+                // We are adding new items to the end and then sorting them
+                // in place. In future we should insert new items in place.
+                newChildren.push(newItem)
+            }
+        } else if (j >= lastFreeIndex) {
+            // Add any leftover non-keyed items
+            newChildren.push(newItem)
+        }
+    }
+
+    var simulate = newChildren.slice()
+    var simulateIndex = 0
+    var removes = []
+    var inserts = []
+    var simulateItem
+
+    for (var k = 0; k < bChildren.length;) {
+        var wantedItem = bChildren[k]
+        simulateItem = simulate[simulateIndex]
+
+        // remove items
+        while (simulateItem === null && simulate.length) {
+            removes.push(remove(simulate, simulateIndex, null))
+            simulateItem = simulate[simulateIndex]
+        }
+
+        if (!simulateItem || simulateItem.key !== wantedItem.key) {
+            // if we need a key in this position...
+            if (wantedItem.key) {
+                if (simulateItem && simulateItem.key) {
+                    // if an insert doesn't put this key in place, it needs to move
+                    if (bKeys[simulateItem.key] !== k + 1) {
+                        removes.push(remove(simulate, simulateIndex, simulateItem.key))
+                        simulateItem = simulate[simulateIndex]
+                        // if the remove didn't put the wanted item in place, we need to insert it
+                        if (!simulateItem || simulateItem.key !== wantedItem.key) {
+                            inserts.push({key: wantedItem.key, to: k})
+                        }
+                        // items are matching, so skip ahead
+                        else {
+                            simulateIndex++
+                        }
+                    }
+                    else {
+                        inserts.push({key: wantedItem.key, to: k})
+                    }
+                }
+                else {
+                    inserts.push({key: wantedItem.key, to: k})
+                }
+                k++
+            }
+            // a key in simulate has no matching wanted key, remove it
+            else if (simulateItem && simulateItem.key) {
+                removes.push(remove(simulate, simulateIndex, simulateItem.key))
+            }
+        }
+        else {
+            simulateIndex++
+            k++
+        }
+    }
+
+    // remove all the remaining nodes from simulate
+    while(simulateIndex < simulate.length) {
+        simulateItem = simulate[simulateIndex]
+        removes.push(remove(simulate, simulateIndex, simulateItem && simulateItem.key))
+    }
+
+    // If the only moves we have are deletes then we can just
+    // let the delete patch remove these items.
+    if (removes.length === deletedItems && !inserts.length) {
+        return {
+            children: newChildren,
+            moves: null
+        }
+    }
+
+    return {
+        children: newChildren,
+        moves: {
+            removes: removes,
+            inserts: inserts
+        }
+    }
+}
+
+function remove(arr, index, key) {
+    arr.splice(index, 1)
+
+    return {
+        from: index,
+        key: key
+    }
+}
+
+function keyIndex(children) {
+    var keys = {}
+    var free = []
+    var length = children.length
+
+    for (var i = 0; i < length; i++) {
+        var child = children[i]
+
+        if (child.key) {
+            keys[child.key] = i
+        } else {
+            free.push(i)
+        }
+    }
+
+    return {
+        keys: keys,     // A hash of key name to index
+        free: free,     // An array of unkeyed item indices
+    }
+}
+
+function appendPatch(apply, patch) {
+    if (apply) {
+        if (isArray(apply)) {
+            apply.push(patch)
+        } else {
+            apply = [apply, patch]
+        }
+
+        return apply
+    } else {
+        return patch
+    }
+}
+
+},{"../vnode/handle-thunk":11,"../vnode/is-thunk":12,"../vnode/is-vnode":14,"../vnode/is-vtext":15,"../vnode/is-widget":16,"../vnode/vpatch":19,"./diff-props":21,"x-is-array":4}],23:[function(require,module,exports){
+var VNode = require('virtual-dom/vnode/vnode');
+var VText = require('virtual-dom/vnode/vtext');
+var diff = require('virtual-dom/vtree/diff');
+var patch = require('virtual-dom/vdom/patch');
+var createElement = require('virtual-dom/create-element');
+var isHook = require("virtual-dom/vnode/is-vhook");
+
 
 Elm.Native.VirtualDom = {};
 Elm.Native.VirtualDom.make = function(elm)
@@ -13350,10 +13070,6 @@ Elm.Native.VirtualDom.make = function(elm)
 	{
 		return elm.Native.VirtualDom.values;
 	}
-
-	// This manages event listeners. Somehow...
-	// Save a reference for use in on(...)
-	var delegator = Delegator();
 
 	var Element = Elm.Native.Graphics.Element.make(elm);
 	var Json = Elm.Native.Json.make(elm);
@@ -13383,7 +13099,14 @@ Elm.Native.VirtualDom.make = function(elm)
 		return object;
 	}
 
-	function node(name, propertyList, contents)
+	function node(name)
+	{
+		return F2(function(propertyList, contents) {
+			return makeNode(name, propertyList, contents);
+		});
+	}
+
+	function makeNode(name, propertyList, contents)
 	{
 		var props = listToProperties(propertyList);
 
@@ -13435,36 +13158,26 @@ Elm.Native.VirtualDom.make = function(elm)
 		};
 	}
 
-	function on(name, decoder, createMessage)
+	function on(name, options, decoder, createMessage)
 	{
-		// Ensure we're listening for this type of event
-		delegator.listenTo(name);
 		function eventHandler(event)
 		{
 			var value = A2(Json.runDecoderValue, decoder, event);
 			if (value.ctor === 'Ok')
 			{
+				if (options.stopPropagation)
+				{
+					event.stopPropagation();
+				}
+				if (options.preventDefault)
+				{
+					event.preventDefault();
+				}
 				Signal.sendMessage(createMessage(value._0));
 			}
 		}
-		return property(name, DataSetHook(eventHandler));
+		return property('on' + name, eventHandler);
 	}
-
-	function DataSetHook(value)
-	{
-		if (!(this instanceof DataSetHook))
-		{
-			return new DataSetHook(value);
-		}
-
-		this.value = value;
-	}
-
-	DataSetHook.prototype.hook = function (node, propertyName) {
-		var ds = DataSet(node);
-		ds[propertyName] = this.value;
-	};
-
 
 	function SoftSetHook(value)
 	{
@@ -13489,21 +13202,26 @@ Elm.Native.VirtualDom.make = function(elm)
 		return new VText(string);
 	}
 
+	function ElementWidget(element)
+	{
+		this.element = element;
+	}
+
+	ElementWidget.prototype.type = "Widget";
+
+	ElementWidget.prototype.init = function init()
+	{
+		return Element.render(this.element);
+	};
+
+	ElementWidget.prototype.update = function update(previous, node)
+	{
+		return Element.update(node, previous.element, this.element);
+	};
+
 	function fromElement(element)
 	{
-		return {
-			type: "Widget",
-
-			element: element,
-
-			init: function () {
-				return Element.render(element);
-			},
-
-			update: function (previous, node) {
-				return Element.update(node, previous.element, element);
-			}
-		};
+		return new ElementWidget(element);
 	}
 
 	function toElement(width, height, html)
@@ -13622,9 +13340,9 @@ Elm.Native.VirtualDom.make = function(elm)
 	}
 
 	return Elm.Native.VirtualDom.values = {
-		node: F3(node),
+		node: node,
 		text: text,
-		on: F3(on),
+		on: F4(on),
 
 		property: F2(property),
 		attribute: F2(attribute),
@@ -13641,9 +13359,9 @@ Elm.Native.VirtualDom.make = function(elm)
 	};
 };
 
-},{"data-set":2,"dom-delegator":8,"vdom/create-element":18,"vdom/patch":24,"vtree/diff":26,"vtree/is-vhook":29,"vtree/vnode":36,"vtree/vtext":38}],40:[function(require,module,exports){
+},{"virtual-dom/create-element":1,"virtual-dom/vdom/patch":9,"virtual-dom/vnode/is-vhook":13,"virtual-dom/vnode/vnode":18,"virtual-dom/vnode/vtext":20,"virtual-dom/vtree/diff":22}],24:[function(require,module,exports){
 
-},{}]},{},[39]);
+},{}]},{},[23]);
 
 Elm.Result = Elm.Result || {};
 Elm.Result.make = function (_elm) {
@@ -14032,6 +13750,95 @@ Elm.Signal.make = function (_elm) {
                         ,forwardTo: forwardTo
                         ,Mailbox: Mailbox};
    return _elm.Signal.values;
+};
+Elm.StartApp = Elm.StartApp || {};
+Elm.StartApp.make = function (_elm) {
+   "use strict";
+   _elm.StartApp = _elm.StartApp || {};
+   if (_elm.StartApp.values)
+   return _elm.StartApp.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "StartApp",
+   $Basics = Elm.Basics.make(_elm),
+   $Effects = Elm.Effects.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Task = Elm.Task.make(_elm);
+   var start = function (config) {
+      return function () {
+         var update = F2(function (_v0,
+         _v1) {
+            return function () {
+               switch (_v1.ctor)
+               {case "_Tuple2":
+                  return function () {
+                       switch (_v0.ctor)
+                       {case "Just":
+                          return A2(config.update,
+                            _v0._0,
+                            _v1._0);}
+                       _U.badCase($moduleName,
+                       "on line 92, column 13 to 39");
+                    }();}
+               _U.badCase($moduleName,
+               "on line 92, column 13 to 39");
+            }();
+         });
+         var messages = $Signal.mailbox($Maybe.Nothing);
+         var address = A2($Signal.forwardTo,
+         messages.address,
+         $Maybe.Just);
+         var inputs = $Signal.mergeMany(A2($List._op["::"],
+         messages.signal,
+         A2($List.map,
+         $Signal.map($Maybe.Just),
+         config.inputs)));
+         var effectsAndModel = A3($Signal.foldp,
+         update,
+         config.init,
+         inputs);
+         var model = A2($Signal.map,
+         $Basics.fst,
+         effectsAndModel);
+         return {_: {}
+                ,html: A2($Signal.map,
+                config.view(address),
+                model)
+                ,model: model
+                ,tasks: A2($Signal.map,
+                function ($) {
+                   return $Effects.toTask(address)($Basics.snd($));
+                },
+                effectsAndModel)};
+      }();
+   };
+   var App = F3(function (a,b,c) {
+      return {_: {}
+             ,html: a
+             ,model: b
+             ,tasks: c};
+   });
+   var Config = F4(function (a,
+   b,
+   c,
+   d) {
+      return {_: {}
+             ,init: a
+             ,inputs: d
+             ,update: b
+             ,view: c};
+   });
+   _elm.StartApp.values = {_op: _op
+                          ,start: start
+                          ,Config: Config
+                          ,App: App};
+   return _elm.StartApp.values;
 };
 Elm.String = Elm.String || {};
 Elm.String.make = function (_elm) {
@@ -14537,6 +14344,7 @@ Elm.TodoMVC.make = function (_elm) {
    $moduleName = "TodoMVC",
    $Basics = Elm.Basics.make(_elm),
    $Dict = Elm.Dict.make(_elm),
+   $Effects = Elm.Effects.make(_elm),
    $ElmFire = Elm.ElmFire.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
@@ -14548,6 +14356,7 @@ Elm.TodoMVC.make = function (_elm) {
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
+   $StartApp = Elm.StartApp.make(_elm),
    $Task = Elm.Task.make(_elm);
    var focus = $Signal.mailbox("");
    var runFocus = Elm.Native.Port.make(_elm).outboundSignal("runFocus",
@@ -14630,10 +14439,10 @@ Elm.TodoMVC.make = function (_elm) {
                                  ,_0: _v3._0 + 1
                                  ,_1: _v3._1 + (_v2._1.completed ? 1 : 0)};}
                        _U.badCase($moduleName,
-                       "on line 392, column 12 to 66");
+                       "on line 367, column 12 to 66");
                     }();}
                _U.badCase($moduleName,
-               "on line 392, column 12 to 66");
+               "on line 367, column 12 to 66");
             }();
          }),
          {ctor: "_Tuple2",_0: 0,_1: 0},
@@ -14653,61 +14462,8 @@ Elm.TodoMVC.make = function (_elm) {
              ,count: b
              ,itemList: a};
    });
-   var FromServer = function (a) {
-      return {ctor: "FromServer"
-             ,_0: a};
-   };
-   var FromGui = function (a) {
-      return {ctor: "FromGui"
-             ,_0: a};
-   };
-   var effectsToTask = function (effects) {
-      return function () {
-         switch (effects.ctor)
-         {case "Concurrent":
-            return $Task.map($Basics.always({ctor: "_Tuple0"}))($Task.sequence(A2($List.map,
-              function ($) {
-                 return $Task.spawn(effectsToTask($));
-              },
-              effects._0)));
-            case "NoEffect":
-            return $Task.succeed({ctor: "_Tuple0"});
-            case "Sequential":
-            return $Task.map($Basics.always({ctor: "_Tuple0"}))($Task.sequence(A2($List.map,
-              effectsToTask,
-              effects._0)));
-            case "SingleTask":
-            return effects._0;}
-         _U.badCase($moduleName,
-         "between lines 134 and 146");
-      }();
-   };
-   var Never = function (a) {
-      return {ctor: "Never",_0: a};
-   };
-   var Concurrent = function (a) {
-      return {ctor: "Concurrent"
-             ,_0: a};
-   };
-   var Sequential = function (a) {
-      return {ctor: "Sequential"
-             ,_0: a};
-   };
-   var SingleTask = function (a) {
-      return {ctor: "SingleTask"
-             ,_0: a};
-   };
-   var effect = function (task) {
-      return SingleTask(A2($Task.map,
-      $Basics.always({ctor: "_Tuple0"}),
-      $Task.toResult(task)));
-   };
-   var effectAsync = function (task) {
-      return SingleTask(A2($Task.map,
-      $Basics.always({ctor: "_Tuple0"}),
-      $Task.spawn(task)));
-   };
-   var NoEffect = {ctor: "NoEffect"};
+   var NoEffectEvent = {ctor: "NoEffectEvent"};
+   var effectInput = $Signal.mailbox(NoEffectEvent);
    var Removed = function (a) {
       return {ctor: "Removed"
              ,_0: a};
@@ -14754,9 +14510,9 @@ Elm.TodoMVC.make = function (_elm) {
    };
    var viewItem = F3(function (guiAddress,
    editingItem,
-   _v14) {
+   _v10) {
       return function () {
-         switch (_v14.ctor)
+         switch (_v10.ctor)
          {case "_Tuple2":
             return function () {
                  var isEditing = function () {
@@ -14764,7 +14520,7 @@ Elm.TodoMVC.make = function (_elm) {
                     {case "Just":
                        switch (editingItem._0.ctor)
                          {case "_Tuple2":
-                            return _U.eq(_v14._0,
+                            return _U.eq(_v10._0,
                               editingItem._0._0) ? {ctor: "_Tuple2"
                                                    ,_0: true
                                                    ,_1: editingItem._0._1} : {ctor: "_Tuple2"
@@ -14778,41 +14534,41 @@ Elm.TodoMVC.make = function (_elm) {
                  return A2($Html.li,
                  _L.fromArray([$Html$Attributes.classList(_L.fromArray([{ctor: "_Tuple2"
                                                                         ,_0: "completed"
-                                                                        ,_1: _v14._1.completed}
+                                                                        ,_1: _v10._1.completed}
                                                                        ,{ctor: "_Tuple2"
                                                                         ,_0: "editing"
                                                                         ,_1: $Basics.fst(isEditing)}]))
-                              ,$Html$Attributes.key(_v14._0)]),
+                              ,$Html$Attributes.key(_v10._0)]),
                  _L.fromArray([A2($Html.div,
                               _L.fromArray([$Html$Attributes.$class("view")]),
                               _L.fromArray([A2($Html.input,
                                            _L.fromArray([$Html$Attributes.$class("toggle")
                                                         ,$Html$Attributes.type$("checkbox")
-                                                        ,$Html$Attributes.checked(_v14._1.completed)
+                                                        ,$Html$Attributes.checked(_v10._1.completed)
                                                         ,A2($Html$Events.onClick,
                                                         guiAddress,
                                                         A2(CheckItem,
-                                                        _v14._0,
-                                                        $Basics.not(_v14._1.completed)))]),
+                                                        _v10._0,
+                                                        $Basics.not(_v10._1.completed)))]),
                                            _L.fromArray([]))
                                            ,A2($Html.label,
                                            _L.fromArray([A2($Html$Events.onDoubleClick,
                                            guiAddress,
                                            EditExistingItem($Maybe.Just({ctor: "_Tuple2"
-                                                                        ,_0: _v14._0
-                                                                        ,_1: _v14._1.title})))]),
-                                           _L.fromArray([$Html.text(_v14._1.title)]))
+                                                                        ,_0: _v10._0
+                                                                        ,_1: _v10._1.title})))]),
+                                           _L.fromArray([$Html.text(_v10._1.title)]))
                                            ,A2($Html.button,
                                            _L.fromArray([$Html$Attributes.$class("destroy")
                                                         ,A2($Html$Events.onClick,
                                                         guiAddress,
-                                                        DeleteItem(_v14._0))]),
+                                                        DeleteItem(_v10._0))]),
                                            _L.fromArray([]))]))
                               ,A2($Html.input,
                               _L.fromArray([$Html$Attributes.$class("edit")
                                            ,$Html$Attributes.id(A2($Basics._op["++"],
                                            "todo-",
-                                           _v14._0))
+                                           _v10._0))
                                            ,$Html$Attributes.value($Basics.fst(isEditing) ? $Basics.snd(isEditing) : "")
                                            ,A3($Html$Events.on,
                                            "input",
@@ -14821,42 +14577,42 @@ Elm.TodoMVC.make = function (_elm) {
                                               return A2($Signal.message,
                                               guiAddress,
                                               EditExistingItem($Maybe.Just({ctor: "_Tuple2"
-                                                                           ,_0: _v14._0
+                                                                           ,_0: _v10._0
                                                                            ,_1: val})));
                                            })
                                            ,A2($Html$Events.onBlur,
                                            guiAddress,
-                                           UpdateItem(_v14._0))
+                                           UpdateItem(_v10._0))
                                            ,A2(onEnter,
                                            guiAddress,
-                                           UpdateItem(_v14._0))]),
+                                           UpdateItem(_v10._0))]),
                               _L.fromArray([]))]));
               }();}
          _U.badCase($moduleName,
-         "between lines 470 and 511");
+         "between lines 443 and 484");
       }();
    });
    var viewItemList = F3(function (guiAddress,
    model,
    augModel) {
       return function () {
-         var isVisibleItem = function (_v22) {
+         var isVisibleItem = function (_v18) {
             return function () {
-               switch (_v22.ctor)
+               switch (_v18.ctor)
                {case "_Tuple2":
                   return function () {
-                       var _v26 = model.filter;
-                       switch (_v26.ctor)
+                       var _v22 = model.filter;
+                       switch (_v22.ctor)
                        {case "Active":
-                          return $Basics.not(_v22._1.completed);
+                          return $Basics.not(_v18._1.completed);
                           case "All": return true;
                           case "Completed":
-                          return _v22._1.completed;}
+                          return _v18._1.completed;}
                        _U.badCase($moduleName,
-                       "between lines 443 and 447");
+                       "between lines 416 and 420");
                     }();}
                _U.badCase($moduleName,
-               "between lines 443 and 447");
+               "between lines 416 and 420");
             }();
          };
          var visibleItemList = A2($List.filter,
@@ -14889,7 +14645,7 @@ Elm.TodoMVC.make = function (_elm) {
                       visibleItemList))]));
       }();
    });
-   var Additem = {ctor: "Additem"};
+   var AddItem = {ctor: "AddItem"};
    var viewEntry = F2(function (guiAddress,
    content) {
       return A2($Html.header,
@@ -14910,18 +14666,25 @@ Elm.TodoMVC.make = function (_elm) {
                                 })
                                 ,A2(onEnter,
                                 guiAddress,
-                                Additem)]),
+                                AddItem)]),
                    _L.fromArray([]))]));
    });
    var NoGuiEvent = {ctor: "NoGuiEvent"};
-   var guiInput = $Signal.mailbox(NoGuiEvent);
-   var actions = A2($Signal.merge,
-   A2($Signal.map,
-   FromGui,
-   guiInput.signal),
-   A2($Signal.map,
-   FromServer,
-   serverInput.signal));
+   var FromEffect = function (a) {
+      return {ctor: "FromEffect"
+             ,_0: a};
+   };
+   var kickOff = function ($) {
+      return $Effects.task($Task.map($Basics.always(FromEffect(NoEffectEvent)))($Task.toMaybe($)));
+   };
+   var FromServer = function (a) {
+      return {ctor: "FromServer"
+             ,_0: a};
+   };
+   var FromGui = function (a) {
+      return {ctor: "FromGui"
+             ,_0: a};
+   };
    var Completed = {ctor: "Completed"};
    var Active = {ctor: "Active"};
    var All = {ctor: "All"};
@@ -14997,9 +14760,12 @@ Elm.TodoMVC.make = function (_elm) {
                       _L.fromArray([$Html.text("Clear completed")]))]));
       }();
    });
-   var view = F2(function (guiAddress,
+   var view = F2(function (actionAddress,
    model) {
       return function () {
+         var guiAddress = A2($Signal.forwardTo,
+         actionAddress,
+         FromGui);
          var augModel = augment(model);
          return A2($Html.div,
          _L.fromArray([]),
@@ -15052,9 +14818,9 @@ Elm.TodoMVC.make = function (_elm) {
    });
    var firebase_test = "https://elmfire-todomvc.firebaseio.com/todos";
    var firebaseUrl = firebase_test;
-   var runServerQuery = Elm.Native.Task.make(_elm).perform(function () {
+   var initialEffect = function () {
       var loc = $ElmFire.fromUrl(firebaseUrl);
-      var doNothing = function (_v27) {
+      var doNothing = function (_v23) {
          return function () {
             return $Task.succeed({ctor: "_Tuple0"});
          }();
@@ -15062,27 +14828,27 @@ Elm.TodoMVC.make = function (_elm) {
       var snap2task = F2(function (eventOp,
       snapshot) {
          return function () {
-            var _v29 = decodeItem(snapshot.value);
-            switch (_v29.ctor)
+            var _v25 = decodeItem(snapshot.value);
+            switch (_v25.ctor)
             {case "Just":
                return A2($Signal.send,
                  serverInput.address,
                  eventOp({ctor: "_Tuple2"
                          ,_0: snapshot.key
-                         ,_1: _v29._0}));
+                         ,_1: _v25._0}));
                case "Nothing":
                return $Task.fail({ctor: "_Tuple0"});}
             _U.badCase($moduleName,
-            "between lines 158 and 164");
+            "between lines 152 and 158");
          }();
       });
-      return A2($Task.andThen,
+      return kickOff(A2($Task.andThen,
       A4($ElmFire.subscribe,
       snap2task(Added),
       doNothing,
       $ElmFire.childAdded,
       loc),
-      function (_v31) {
+      function (_v27) {
          return function () {
             return A2($Task.andThen,
             A4($ElmFire.subscribe,
@@ -15090,23 +14856,23 @@ Elm.TodoMVC.make = function (_elm) {
             doNothing,
             $ElmFire.childChanged,
             loc),
-            function (_v33) {
+            function (_v29) {
                return function () {
                   return A2($Task.andThen,
                   A4($ElmFire.subscribe,
-                  snap2task(function (_v35) {
+                  snap2task(function (_v31) {
                      return function () {
-                        switch (_v35.ctor)
+                        switch (_v31.ctor)
                         {case "_Tuple2":
-                           return Removed(_v35._0);}
+                           return Removed(_v31._0);}
                         _U.badCase($moduleName,
-                        "on line 175, column 31 to 41");
+                        "on line 170, column 33 to 43");
                      }();
                   }),
                   doNothing,
                   $ElmFire.childRemoved,
                   loc),
-                  function (_v39) {
+                  function (_v35) {
                      return function () {
                         return $Task.succeed({ctor: "_Tuple0"});
                      }();
@@ -15114,239 +14880,237 @@ Elm.TodoMVC.make = function (_elm) {
                }();
             });
          }();
-      });
-   }());
+      }));
+   }();
    var updateState = F2(function (action,
-   _v41) {
+   model) {
       return function () {
-         switch (_v41.ctor)
-         {case "_Tuple2":
-            return function () {
-                 switch (action.ctor)
-                 {case "FromGui":
-                    switch (action._0.ctor)
-                      {case "Additem":
-                         return {ctor: "_Tuple2"
-                                ,_0: _U.replace([["addField"
-                                                 ,""]],
-                                _v41._0)
-                                ,_1: _U.eq(_v41._0.addField,
-                                "") ? NoEffect : effectAsync(A2($ElmFire.set,
-                                $Json$Encode.object(_L.fromArray([{ctor: "_Tuple2"
-                                                                  ,_0: "title"
-                                                                  ,_1: $Json$Encode.string(_v41._0.addField)}
-                                                                 ,{ctor: "_Tuple2"
-                                                                  ,_0: "completed"
-                                                                  ,_1: $Json$Encode.bool(false)}])),
-                                $ElmFire.push($ElmFire.fromUrl(firebaseUrl))))};
-                         case "CheckAllItems":
-                         return {ctor: "_Tuple2"
-                                ,_0: _v41._0
-                                ,_1: Concurrent(A2($List.map,
-                                function (key) {
-                                   return effectAsync(A3($ElmFire.transaction,
+         switch (action.ctor)
+         {case "FromEffect":
+            return {ctor: "_Tuple2"
+                   ,_0: model
+                   ,_1: $Effects.none};
+            case "FromGui":
+            switch (action._0.ctor)
+              {case "AddItem":
+                 return {ctor: "_Tuple2"
+                        ,_0: _U.replace([["addField"
+                                         ,""]],
+                        model)
+                        ,_1: _U.eq(model.addField,
+                        "") ? $Effects.none : kickOff(A2($ElmFire.set,
+                        $Json$Encode.object(_L.fromArray([{ctor: "_Tuple2"
+                                                          ,_0: "title"
+                                                          ,_1: $Json$Encode.string(model.addField)}
+                                                         ,{ctor: "_Tuple2"
+                                                          ,_0: "completed"
+                                                          ,_1: $Json$Encode.bool(false)}])),
+                        $ElmFire.push($ElmFire.fromUrl(firebaseUrl))))};
+                 case "CheckAllItems":
+                 return {ctor: "_Tuple2"
+                        ,_0: model
+                        ,_1: $Effects.batch(A2($List.map,
+                        function (key) {
+                           return kickOff(A3($ElmFire.transaction,
+                           function (maybeItem) {
+                              return function () {
+                                 switch (maybeItem.ctor)
+                                 {case "Just":
+                                    return function () {
+                                         var _v58 = decodeItem(maybeItem._0);
+                                         switch (_v58.ctor)
+                                         {case "Just":
+                                            return $ElmFire.Set($Json$Encode.object(_L.fromArray([{ctor: "_Tuple2"
+                                                                                                  ,_0: "title"
+                                                                                                  ,_1: $Json$Encode.string(_v58._0.title)}
+                                                                                                 ,{ctor: "_Tuple2"
+                                                                                                  ,_0: "completed"
+                                                                                                  ,_1: $Json$Encode.bool(action._0._0)}])));
+                                            case "Nothing":
+                                            return $ElmFire.Abort;}
+                                         _U.badCase($moduleName,
+                                         "between lines 308 and 318");
+                                      }();
+                                    case "Nothing":
+                                    return $ElmFire.Abort;}
+                                 _U.badCase($moduleName,
+                                 "between lines 306 and 320");
+                              }();
+                           },
+                           $ElmFire.sub(key)($ElmFire.fromUrl(firebaseUrl)),
+                           true));
+                        },
+                        $Dict.keys(model.items)))};
+                 case "CheckItem":
+                 return {ctor: "_Tuple2"
+                        ,_0: model
+                        ,_1: kickOff(A2($ElmFire.update,
+                        $Json$Encode.object(_L.fromArray([{ctor: "_Tuple2"
+                                                          ,_0: "completed"
+                                                          ,_1: $Json$Encode.bool(action._0._1)}])),
+                        $ElmFire.sub(action._0._0)($ElmFire.fromUrl(firebaseUrl))))};
+                 case "DeleteCompletedItems":
+                 return {ctor: "_Tuple2"
+                        ,_0: model
+                        ,_1: $Effects.batch(A2($List.filterMap,
+                        function (_v60) {
+                           return function () {
+                              switch (_v60.ctor)
+                              {case "_Tuple2":
+                                 return _v60._1.completed ? $Maybe.Just(kickOff(A3($ElmFire.transaction,
                                    function (maybeItem) {
                                       return function () {
                                          switch (maybeItem.ctor)
                                          {case "Just":
                                             return function () {
-                                                 var _v65 = decodeItem(maybeItem._0);
-                                                 switch (_v65.ctor)
+                                                 var _v66 = decodeItem(maybeItem._0);
+                                                 switch (_v66.ctor)
                                                  {case "Just":
-                                                    return $ElmFire.Set($Json$Encode.object(_L.fromArray([{ctor: "_Tuple2"
-                                                                                                          ,_0: "title"
-                                                                                                          ,_1: $Json$Encode.string(_v65._0.title)}
-                                                                                                         ,{ctor: "_Tuple2"
-                                                                                                          ,_0: "completed"
-                                                                                                          ,_1: $Json$Encode.bool(action._0._0)}])));
+                                                    return _v66._0.completed ? $ElmFire.Remove : $ElmFire.Abort;
                                                     case "Nothing":
                                                     return $ElmFire.Abort;}
                                                  _U.badCase($moduleName,
-                                                 "between lines 333 and 343");
+                                                 "between lines 273 and 280");
                                               }();
                                             case "Nothing":
                                             return $ElmFire.Abort;}
                                          _U.badCase($moduleName,
-                                         "between lines 331 and 345");
+                                         "between lines 271 and 282");
                                       }();
                                    },
-                                   $ElmFire.sub(key)($ElmFire.fromUrl(firebaseUrl)),
-                                   true));
-                                },
-                                $Dict.keys(_v41._0.items)))};
-                         case "CheckItem":
-                         return {ctor: "_Tuple2"
-                                ,_0: _v41._0
-                                ,_1: effectAsync(A2($ElmFire.update,
-                                $Json$Encode.object(_L.fromArray([{ctor: "_Tuple2"
-                                                                  ,_0: "completed"
-                                                                  ,_1: $Json$Encode.bool(action._0._1)}])),
-                                $ElmFire.sub(action._0._0)($ElmFire.fromUrl(firebaseUrl))))};
-                         case "DeleteCompletedItems":
-                         return {ctor: "_Tuple2"
-                                ,_0: _v41._0
-                                ,_1: Concurrent(A2($List.filterMap,
-                                function (_v67) {
-                                   return function () {
-                                      switch (_v67.ctor)
-                                      {case "_Tuple2":
-                                         return _v67._1.completed ? $Maybe.Just(effectAsync(A3($ElmFire.transaction,
-                                           function (maybeItem) {
-                                              return function () {
-                                                 switch (maybeItem.ctor)
-                                                 {case "Just":
-                                                    return function () {
-                                                         var _v73 = decodeItem(maybeItem._0);
-                                                         switch (_v73.ctor)
-                                                         {case "Just":
-                                                            return _v73._0.completed ? $ElmFire.Remove : $ElmFire.Abort;
-                                                            case "Nothing":
-                                                            return $ElmFire.Abort;}
-                                                         _U.badCase($moduleName,
-                                                         "between lines 298 and 305");
-                                                      }();
-                                                    case "Nothing":
-                                                    return $ElmFire.Abort;}
-                                                 _U.badCase($moduleName,
-                                                 "between lines 296 and 307");
-                                              }();
-                                           },
-                                           $ElmFire.sub(_v67._0)($ElmFire.fromUrl(firebaseUrl)),
-                                           true))) : $Maybe.Nothing;}
-                                      _U.badCase($moduleName,
-                                      "between lines 292 and 310");
-                                   }();
-                                },
-                                $Dict.toList(_v41._0.items)))};
-                         case "DeleteItem":
-                         return {ctor: "_Tuple2"
-                                ,_0: _v41._0
-                                ,_1: effectAsync($ElmFire.remove($ElmFire.sub(action._0._0)($ElmFire.fromUrl(firebaseUrl))))};
-                         case "EditAddField":
-                         return {ctor: "_Tuple2"
-                                ,_0: _U.replace([["addField"
-                                                 ,action._0._0]],
-                                _v41._0)
-                                ,_1: NoEffect};
-                         case "EditExistingItem":
-                         return {ctor: "_Tuple2"
-                                ,_0: _U.replace([["editingItem"
-                                                 ,action._0._0]],
-                                _v41._0)
-                                ,_1: function () {
-                                   switch (action._0._0.ctor)
-                                   {case "Just":
-                                      switch (action._0._0._0.ctor)
-                                        {case "_Tuple2":
-                                           return effect(A2($Signal.send,
-                                             focus.address,
-                                             action._0._0._0._0));}
-                                        break;}
-                                   return NoEffect;
-                                }()};
-                         case "SetFilter":
-                         return {ctor: "_Tuple2"
-                                ,_0: _U.replace([["filter"
-                                                 ,action._0._0]],
-                                _v41._0)
-                                ,_1: NoEffect};
-                         case "UpdateItem":
-                         return {ctor: "_Tuple2"
-                                ,_0: _U.replace([["editingItem"
-                                                 ,$Maybe.Nothing]],
-                                _v41._0)
-                                ,_1: function () {
-                                   var _v79 = _v41._0.editingItem;
-                                   switch (_v79.ctor)
-                                   {case "Just":
-                                      switch (_v79._0.ctor)
-                                        {case "_Tuple2":
-                                           return _U.eq(action._0._0,
-                                             _v79._0._0) ? effectAsync(_U.eq(_v79._0._1,
-                                             "") ? $ElmFire.remove($ElmFire.sub(action._0._0)($ElmFire.fromUrl(firebaseUrl))) : A2($ElmFire.update,
-                                             $Json$Encode.object(_L.fromArray([{ctor: "_Tuple2"
-                                                                               ,_0: "title"
-                                                                               ,_1: $Json$Encode.string(_v79._0._1)}])),
-                                             $ElmFire.sub(action._0._0)($ElmFire.fromUrl(firebaseUrl)))) : NoEffect;}
-                                        break;}
-                                   return NoEffect;
-                                }()};}
-                      break;
-                    case "FromServer":
-                    switch (action._0.ctor)
-                      {case "Added":
-                         switch (action._0._0.ctor)
-                           {case "_Tuple2":
-                              return {ctor: "_Tuple2"
-                                     ,_0: _U.replace([["items"
-                                                      ,A3($Dict.insert,
-                                                      action._0._0._0,
-                                                      action._0._0._1,
-                                                      _v41._0.items)]],
-                                     _v41._0)
-                                     ,_1: NoEffect};}
-                           break;
-                         case "Changed":
-                         switch (action._0._0.ctor)
-                           {case "_Tuple2":
-                              return {ctor: "_Tuple2"
-                                     ,_0: _U.replace([["items"
-                                                      ,A3($Dict.insert,
-                                                      action._0._0._0,
-                                                      action._0._0._1,
-                                                      _v41._0.items)]],
-                                     _v41._0)
-                                     ,_1: NoEffect};}
-                           break;
-                         case "Removed":
-                         return {ctor: "_Tuple2"
-                                ,_0: _U.replace([["items"
-                                                 ,A2($Dict.remove,
-                                                 action._0._0,
-                                                 _v41._0.items)]],
-                                _v41._0)
-                                ,_1: NoEffect};}
-                      break;}
+                                   $ElmFire.sub(_v60._0)($ElmFire.fromUrl(firebaseUrl)),
+                                   true))) : $Maybe.Nothing;}
+                              _U.badCase($moduleName,
+                              "between lines 267 and 285");
+                           }();
+                        },
+                        $Dict.toList(model.items)))};
+                 case "DeleteItem":
                  return {ctor: "_Tuple2"
-                        ,_0: _v41._0
-                        ,_1: NoEffect};
-              }();}
-         _U.badCase($moduleName,
-         "between lines 229 and 373");
+                        ,_0: model
+                        ,_1: kickOff($ElmFire.remove($ElmFire.sub(action._0._0)($ElmFire.fromUrl(firebaseUrl))))};
+                 case "EditAddField":
+                 return {ctor: "_Tuple2"
+                        ,_0: _U.replace([["addField"
+                                         ,action._0._0]],
+                        model)
+                        ,_1: $Effects.none};
+                 case "EditExistingItem":
+                 return {ctor: "_Tuple2"
+                        ,_0: _U.replace([["editingItem"
+                                         ,action._0._0]],
+                        model)
+                        ,_1: function () {
+                           switch (action._0._0.ctor)
+                           {case "Just":
+                              switch (action._0._0._0.ctor)
+                                {case "_Tuple2":
+                                   return kickOff(A2($Signal.send,
+                                     focus.address,
+                                     action._0._0._0._0));}
+                                break;}
+                           return $Effects.none;
+                        }()};
+                 case "SetFilter":
+                 return {ctor: "_Tuple2"
+                        ,_0: _U.replace([["filter"
+                                         ,action._0._0]],
+                        model)
+                        ,_1: $Effects.none};
+                 case "UpdateItem":
+                 return {ctor: "_Tuple2"
+                        ,_0: _U.replace([["editingItem"
+                                         ,$Maybe.Nothing]],
+                        model)
+                        ,_1: function () {
+                           var _v72 = model.editingItem;
+                           switch (_v72.ctor)
+                           {case "Just":
+                              switch (_v72._0.ctor)
+                                {case "_Tuple2":
+                                   return _U.eq(action._0._0,
+                                     _v72._0._0) ? kickOff(_U.eq(_v72._0._1,
+                                     "") ? $ElmFire.remove($ElmFire.sub(action._0._0)($ElmFire.fromUrl(firebaseUrl))) : A2($ElmFire.update,
+                                     $Json$Encode.object(_L.fromArray([{ctor: "_Tuple2"
+                                                                       ,_0: "title"
+                                                                       ,_1: $Json$Encode.string(_v72._0._1)}])),
+                                     $ElmFire.sub(action._0._0)($ElmFire.fromUrl(firebaseUrl)))) : $Effects.none;}
+                                break;}
+                           return $Effects.none;
+                        }()};}
+              break;
+            case "FromServer":
+            switch (action._0.ctor)
+              {case "Added":
+                 switch (action._0._0.ctor)
+                   {case "_Tuple2":
+                      return {ctor: "_Tuple2"
+                             ,_0: _U.replace([["items"
+                                              ,A3($Dict.insert,
+                                              action._0._0._0,
+                                              action._0._0._1,
+                                              model.items)]],
+                             model)
+                             ,_1: $Effects.none};}
+                   break;
+                 case "Changed":
+                 switch (action._0._0.ctor)
+                   {case "_Tuple2":
+                      return {ctor: "_Tuple2"
+                             ,_0: _U.replace([["items"
+                                              ,A3($Dict.insert,
+                                              action._0._0._0,
+                                              action._0._0._1,
+                                              model.items)]],
+                             model)
+                             ,_1: $Effects.none};}
+                   break;
+                 case "Removed":
+                 return {ctor: "_Tuple2"
+                        ,_0: _U.replace([["items"
+                                         ,A2($Dict.remove,
+                                         action._0._0,
+                                         model.items)]],
+                        model)
+                        ,_1: $Effects.none};}
+              break;}
+         return {ctor: "_Tuple2"
+                ,_0: model
+                ,_1: $Effects.none};
       }();
    });
-   var state = A3($Signal.foldp,
-   updateState,
-   {ctor: "_Tuple2"
-   ,_0: initialModel
-   ,_1: NoEffect},
-   actions);
-   var model = A2($Signal.map,
-   $Basics.fst,
-   state);
-   var main = A2($Signal.map,
-   view(guiInput.address),
-   model);
-   var effects = A2($Signal.map,
-   $Basics.snd,
-   state);
+   var config = {_: {}
+                ,init: {ctor: "_Tuple2"
+                       ,_0: initialModel
+                       ,_1: initialEffect}
+                ,inputs: _L.fromArray([A2($Signal.map,
+                FromServer,
+                serverInput.signal)])
+                ,update: updateState
+                ,view: view};
+   var app = $StartApp.start(config);
    var runEffects = Elm.Native.Task.make(_elm).performSignal("runEffects",
-   A2($Signal.map,
-   effectsToTask,
-   effects));
+   app.tasks);
+   var main = app.html;
    var firebase_foreign = "https://todomvc-angular.firebaseio.com/todos";
    _elm.TodoMVC.values = {_op: _op
                          ,firebase_foreign: firebase_foreign
                          ,firebase_test: firebase_test
                          ,firebaseUrl: firebaseUrl
+                         ,config: config
+                         ,app: app
+                         ,main: main
                          ,Model: Model
                          ,Item: Item
                          ,All: All
                          ,Active: Active
                          ,Completed: Completed
                          ,initialModel: initialModel
+                         ,FromGui: FromGui
+                         ,FromServer: FromServer
+                         ,FromEffect: FromEffect
                          ,NoGuiEvent: NoGuiEvent
-                         ,Additem: Additem
+                         ,AddItem: AddItem
                          ,UpdateItem: UpdateItem
                          ,DeleteItem: DeleteItem
                          ,DeleteCompletedItems: DeleteCompletedItems
@@ -15355,32 +15119,20 @@ Elm.TodoMVC.make = function (_elm) {
                          ,EditExistingItem: EditExistingItem
                          ,EditAddField: EditAddField
                          ,SetFilter: SetFilter
-                         ,guiInput: guiInput
                          ,NoServerEvent: NoServerEvent
                          ,Added: Added
                          ,Changed: Changed
                          ,Removed: Removed
                          ,serverInput: serverInput
-                         ,NoEffect: NoEffect
-                         ,SingleTask: SingleTask
-                         ,Sequential: Sequential
-                         ,Concurrent: Concurrent
-                         ,Never: Never
-                         ,effect: effect
-                         ,effectAsync: effectAsync
-                         ,effectsToTask: effectsToTask
+                         ,NoEffectEvent: NoEffectEvent
+                         ,effectInput: effectInput
+                         ,initialEffect: initialEffect
                          ,decodeItem: decodeItem
                          ,decoderItem: decoderItem
-                         ,FromGui: FromGui
-                         ,FromServer: FromServer
-                         ,actions: actions
-                         ,state: state
-                         ,model: model
-                         ,effects: effects
+                         ,kickOff: kickOff
                          ,updateState: updateState
                          ,AugModel: AugModel
                          ,augment: augment
-                         ,main: main
                          ,view: view
                          ,viewEntry: viewEntry
                          ,viewItemList: viewItemList
@@ -15479,7 +15231,25 @@ Elm.VirtualDom.make = function (_elm) {
    var lazy3 = $Native$VirtualDom.lazy3;
    var lazy2 = $Native$VirtualDom.lazy2;
    var lazy = $Native$VirtualDom.lazy;
-   var on = $Native$VirtualDom.on;
+   var defaultOptions = {_: {}
+                        ,preventDefault: false
+                        ,stopPropagation: false};
+   var Options = F2(function (a,
+   b) {
+      return {_: {}
+             ,preventDefault: b
+             ,stopPropagation: a};
+   });
+   var onWithOptions = $Native$VirtualDom.on;
+   var on = F3(function (eventName,
+   decoder,
+   toMessage) {
+      return A4($Native$VirtualDom.on,
+      eventName,
+      defaultOptions,
+      decoder,
+      toMessage);
+   });
    var attribute = $Native$VirtualDom.attribute;
    var property = $Native$VirtualDom.property;
    var Property = {ctor: "Property"};
@@ -15489,17 +15259,18 @@ Elm.VirtualDom.make = function (_elm) {
    var node = $Native$VirtualDom.node;
    var Node = {ctor: "Node"};
    _elm.VirtualDom.values = {_op: _op
-                            ,Node: Node
-                            ,node: node
                             ,text: text
+                            ,node: node
                             ,toElement: toElement
                             ,fromElement: fromElement
-                            ,Property: Property
                             ,property: property
                             ,attribute: attribute
                             ,on: on
+                            ,onWithOptions: onWithOptions
+                            ,defaultOptions: defaultOptions
                             ,lazy: lazy
                             ,lazy2: lazy2
-                            ,lazy3: lazy3};
+                            ,lazy3: lazy3
+                            ,Options: Options};
    return _elm.VirtualDom.values;
 };
