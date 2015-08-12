@@ -23,6 +23,7 @@ import Json.Decode as JD exposing ((:=))
 import Json.Encode as JE
 import Signal exposing (Mailbox, Address, mailbox, message)
 import Task exposing (Task, andThen)
+import Effects exposing (Effects, Never)
 
 import ElmFire
 
@@ -95,7 +96,7 @@ type alias GuiAddress = Address GuiEvent
 
 -----------------------------------------------------------------------
 
--- Events originating from firebase
+-- Events originating from firebase responses
 
 type ServerEvent
   = NoServerEvent
@@ -106,51 +107,56 @@ type ServerEvent
 serverInput : Mailbox ServerEvent
 serverInput = mailbox NoServerEvent
 
+-- Events originating from effect (mostly firebase commands)
+-- Actually there are not meanigful return values, so we have only a single value here.
+
+type EffectEvent
+  = NoEffectEvent
+
+effectInput : Mailbox EffectEvent
+effectInput = mailbox NoEffectEvent
+
 -----------------------------------------------------------------------
 
--- Effects are a unifying wrapper for (zero or more) tasks
+-- Wire the app together: gui events, server events, state, update and effects
 
--- Architecural pattern partially taken from Evan Czaplicki
--- https://github.com/evancz/the-social-network/blob/7c77128c431e64e837d56e430bd82803b1c4a4e7/src/Tea.elm
+type Action
+  = FromGui GuiEvent
+  | FromServer ServerEvent
+  | FromEffect EffectEvent
 
-type Effects
-  = NoEffect
-  | SingleTask (Task Never ())
-  | Sequential (List Effects)
-  | Concurrent (List Effects)
+actions : Signal Action
+actions =
+  Signal.mergeMany
+    [ Signal.map FromGui guiInput.signal
+    , Signal.map FromServer serverInput.signal
+    , Signal.map FromEffect effectInput.signal
+    ]
 
-type Never = Never Never
+state : Signal (Model, Effects EffectEvent)
+state =
+  Signal.foldp
+    updateState
+    (initialModel, initialEffect)
+    actions
 
-effect : Task x a -> Effects
-effect task =
-  SingleTask <| Task.map (always ()) (Task.toResult task)
+model : Signal Model
+model =
+  Signal.map fst state
 
-effectAsync : Task x a -> Effects
-effectAsync task =
-  SingleTask <| Task.map (always ()) (Task.spawn task)
+effects : Signal (Effects EffectEvent)
+effects =
+  Signal.map snd state
 
-effectsToTask : Effects -> Task Never ()
-effectsToTask effects =
-  case effects of
-    NoEffect ->
-      Task.succeed ()
-    SingleTask task ->
-      task
-    Sequential listOfEffects ->
-      List.map effectsToTask listOfEffects
-      |> Task.sequence
-      |> Task.map (always ())
-    Concurrent listOfEffects ->
-      List.map (effectsToTask >> Task.spawn) listOfEffects
-      |> Task.sequence
-      |> Task.map (always ())
+port runEffects : Signal (Task Never ())
+port runEffects =
+  Signal.map (Effects.toTask effectInput.address) effects
 
 -----------------------------------------------------------------------
 
 -- Subscribe to firebase events: adding, removing and changing items
 
-port runServerQuery : Task ElmFire.Error ()
-port runServerQuery =
+initialEffect =
   let
     snap2task : ((Id, Item) -> ServerEvent) -> ElmFire.Snapshot -> Task () ()
     snap2task eventOp =
@@ -165,16 +171,20 @@ port runServerQuery =
     doNothing = \_ -> Task.succeed ()
     loc = (ElmFire.fromUrl firebaseUrl)
   in
-    ElmFire.subscribe
-      (snap2task Added) doNothing ElmFire.childAdded loc
-    `andThen`
-    \_ -> ElmFire.subscribe
-      (snap2task Changed) doNothing ElmFire.childChanged loc
-    `andThen`
-    \_ -> ElmFire.subscribe
-      (snap2task (\(id, _) -> Removed id)) doNothing ElmFire.childRemoved loc
-    `andThen`
-    \_ -> Task.succeed ()
+    kickOff
+    ( ElmFire.subscribe
+        (snap2task Added) doNothing ElmFire.childAdded loc
+      `andThen`
+      \_ -> ElmFire.subscribe
+        (snap2task Changed) doNothing ElmFire.childChanged loc
+      `andThen`
+      \_ -> ElmFire.subscribe
+        (snap2task (\(id, _) -> Removed id)) doNothing ElmFire.childRemoved loc
+      `andThen`
+      \_ -> Task.succeed ()
+    )
+
+-----------------------------------------------------------------------
 
 decodeItem : JD.Value -> Maybe Item
 decodeItem value =
@@ -189,66 +199,43 @@ decoderItem =
 
 -----------------------------------------------------------------------
 
--- Wire the app together: gui events, server events, state, update and effects
+-- Process gui events and server events yielding model updates and effects
 
-type Action
-  = FromGui GuiEvent
-  | FromServer ServerEvent
+{- Map any task to an effect, discarding any direct result or error value -}
+kickOff : Task x a -> Effects EffectEvent
+kickOff =
+  Task.toMaybe >> Task.map (always NoEffectEvent) >> Effects.task
 
-actions : Signal Action
-actions =
-  Signal.merge
-    (Signal.map FromGui guiInput.signal)
-    (Signal.map FromServer serverInput.signal)
-
-state : Signal (Model, Effects)
-state =
-  Signal.foldp
-    updateState
-    (initialModel, NoEffect)
-    actions
-
-model : Signal Model
-model =
-  Signal.map fst state
-
-effects : Signal Effects
-effects =
-  Signal.map snd state
-
-port runEffects : Signal (Task Never ())
-port runEffects =
-  Signal.map effectsToTask effects
-
------------------------------------------------------------------------
-
--- Process gui events and server events yielding model updates and server effects
-
-updateState : Action -> (Model, Effects) -> (Model, Effects)
+updateState : Action -> (Model, Effects EffectEvent) -> (Model, Effects EffectEvent)
 updateState action (model, _) =
   case action of
 
+    FromEffect _ ->
+      ( model
+      , Effects.none
+      )
+
     FromServer (Added (id, item)) ->
       ( { model | items <- Dict.insert id item model.items }
-      , NoEffect
+      , Effects.none
       )
 
     FromServer (Changed (id, item)) ->
       ( { model | items <- Dict.insert id item model.items }
-      , NoEffect
+      , Effects.none
       )
 
     FromServer (Removed id) ->
       ( { model | items <- Dict.remove id model.items }
-      , NoEffect
+      , Effects.none
       )
 
     FromGui (AddItem) ->
       ( { model | addField <- "" }
       , if model.addField == ""
-        then NoEffect
+        then Effects.none
         else
-          effectAsync <|
+          kickOff <|
             ElmFire.set
               ( JE.object
                   [ ("title", JE.string model.addField)
@@ -264,7 +251,7 @@ updateState action (model, _) =
           Just (id1, title) ->
             if (id == id1)
             then
-              effectAsync <|
+              kickOff <|
                 if title == ""
                 then
                   ElmFire.remove
@@ -273,25 +260,25 @@ updateState action (model, _) =
                   ElmFire.update
                     ( JE.object [ ("title", JE.string title) ] )
                     ( ElmFire.fromUrl firebaseUrl |> ElmFire.sub id )
-            else NoEffect
-          _ -> NoEffect
+            else Effects.none
+          _ -> Effects.none
       )
 
     FromGui (DeleteItem id) ->
       ( model
-      , effectAsync <|
+      , kickOff <|
           ElmFire.remove
             ( ElmFire.fromUrl firebaseUrl |> ElmFire.sub id )
       )
 
     FromGui (DeleteCompletedItems) ->
       ( model
-      , Concurrent <|
+      , Effects.batch <|
         List.filterMap
           ( \(key, itemFromModel) ->
             if itemFromModel.completed
             then
-              Just <| effectAsync <| ElmFire.transaction
+              Just <| kickOff <| ElmFire.transaction
                 ( \maybeItem ->
                   case maybeItem of
                     Just itemJson ->
@@ -314,7 +301,7 @@ updateState action (model, _) =
 
     FromGui (CheckItem id completed) ->
       ( model
-      , effectAsync <|
+      , kickOff <|
           ElmFire.update
             ( JE.object [ ("completed", JE.bool completed) ] )
             ( ElmFire.fromUrl firebaseUrl |> ElmFire.sub id )
@@ -322,10 +309,10 @@ updateState action (model, _) =
 
     FromGui (CheckAllItems completed) ->
       ( model
-      , Concurrent <|
+      , Effects.batch <|
         List.map
           ( \key ->
-            effectAsync <|
+            kickOff <|
               ElmFire.transaction
                 ( \maybeItem ->
                   case maybeItem of
@@ -353,23 +340,23 @@ updateState action (model, _) =
       ( { model | editingItem <- e }
       , case e of
           Just (id, _) ->
-            effect <| Signal.send focus.address id
-          _ -> NoEffect
+            kickOff <| Signal.send focus.address id
+          _ -> Effects.none
       )
 
     FromGui (EditAddField content) ->
       ( { model | addField <- content }
-      , NoEffect
+      , Effects.none
       )
 
     FromGui (SetFilter filter) ->
       ( { model | filter <- filter }
-      , NoEffect
+      , Effects.none
       )
 
     _ ->
       ( model
-      , NoEffect
+      , Effects.none
       )
 
 -----------------------------------------------------------------------
@@ -428,7 +415,7 @@ viewEntry guiAddress content =
           , autofocus True
           , value content
           , on "input" targetValue (message guiAddress << EditAddField)
-          , onEnter guiAddress (AddItem)
+          , onEnter guiAddress AddItem
           ]
         )
         []

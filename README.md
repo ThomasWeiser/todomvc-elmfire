@@ -29,19 +29,19 @@ a copy of it's source is currently included.
 ## Architectural Overview
 
 The app complies with [The Elm Architecture](https://github.com/evancz/elm-architecture-tutorial/),
-extended with the server communication to store the content to a Firebase.
+including [Effects](http://package.elm-lang.org/packages/evancz/elm-effects/latest) to store the content to a Firebase.
 
 A sketch of the data flow:
 
 - Inputs are coming from
     - Firebase query results
     - user interaction
-- The model comprises two parts
+- The `model` comprises two parts
     - shared persistent state (list of items)
     - local state (filter settings, intermediate edit state)
-- An update function takes an input event and the current model, returning
-  a new model and possibly a task to change the Firebase
-- A view function renders the current model as HTML
+- An `update` function takes an input event and the current model, returning
+  a new model and possibly an effect, i.e. a task to change the Firebase data.
+- A `view` function renders the current model as HTML
 
 Please note that content changes made by the user always flow through the Firebase layer.
 From there they a passed down to the new model.
@@ -59,8 +59,8 @@ to map these ids to the items' payload.
 
 ## Future Work
 
-- ElmFire should provide a means for auto syncing a Dict with a Firebase object.
+- ElmFire will provide a means for [auto syncing a Dict](https://github.com/ThomasWeiser/elmfire/tree/dict) with a Firebase object. Use it.
 - Explore architectural variations
     - Componentize the model: split it into a shared part and a local part
       where the local part depends on the shared part but the other way round.
-- Possibly split the source code into modules, like [this](https://github.com/evancz/the-social-network)
+- Possibly structure the code into components, as outlined in [The Elm Architecture](https://github.com/evancz/elm-architecture-tutorial/).
