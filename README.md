@@ -64,5 +64,5 @@ to map these ids to the items' payload.
 - ElmFire will provide a means for [auto syncing a Dict](https://github.com/ThomasWeiser/elmfire/tree/dict) with a Firebase object. Use it.
 - Explore architectural variations
     - Componentize the model: split it into a shared part and a local part
-      where the local part depends on the shared part but the other way round.
+      where the local part depends on the shared part but not the other way round.
 - Possibly structure the code into components, as outlined in [The Elm Architecture](https://github.com/evancz/elm-architecture-tutorial/).
