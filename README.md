@@ -22,10 +22,6 @@ Alternatively use the enclosed `Makefile` on Unix-like machines:
 
     make all open
     
-As [ElmFire](https://github.com/ThomasWeiser/elmfire)
-is not yet available from the official Elm package catalog,
-a copy of it's source is currently included.
-
 ## Architectural Overview
 
 The app complies with [The Elm Architecture](https://github.com/evancz/elm-architecture-tutorial/),
