@@ -161,13 +161,13 @@ initialEffect =
   in
     kickOff
     ( ElmFire.subscribe
-        (snap2task Added) doNothing ElmFire.childAdded loc
+        (snap2task Added) doNothing (ElmFire.childAdded ElmFire.noOrder) loc
       `andThen`
       \_ -> ElmFire.subscribe
-        (snap2task Changed) doNothing ElmFire.childChanged loc
+        (snap2task Changed) doNothing (ElmFire.childChanged ElmFire.noOrder) loc
       `andThen`
       \_ -> ElmFire.subscribe
-        (snap2task (\(id, _) -> Removed id)) doNothing ElmFire.childRemoved loc
+        (snap2task (\(id, _) -> Removed id)) doNothing (ElmFire.childRemoved ElmFire.noOrder) loc
       `andThen`
       \_ -> Task.succeed ()
     )
