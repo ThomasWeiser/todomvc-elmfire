@@ -26,8 +26,7 @@ Alternatively use the enclosed `Makefile` on Unix-like machines:
 
 The app complies with [The Elm Architecture](https://github.com/evancz/elm-architecture-tutorial/),
 using [evancz/start-app](http://package.elm-lang.org/packages/evancz/start-app/2.0.0/)
-and [evancz/elm-effects](http://package.elm-lang.org/packages/evancz/elm-effects/1.0.0)
-for talking to the Firebase server.
+and [evancz/elm-effects](http://package.elm-lang.org/packages/evancz/elm-effects/1.0.0).
 
 A sketch of the data flow:
 
