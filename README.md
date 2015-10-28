@@ -57,7 +57,8 @@ to map these ids to the items' payload.
 
 ## Future Work
 
-- ElmFire will provide a means for [auto syncing a Dict](https://github.com/ThomasWeiser/elmfire/tree/dict) with a Firebase object. Use it.
+- ElmFire will provide a means for [auto syncing a Dict](https://github.com/ThomasWeiser/elmfire-extra) with a Firebase object.
+  We will use it here to simplify the server interop. Beta version in branch [elmfire-extra](https://github.com/ThomasWeiser/todomvc-elmfire/tree/elmfire-extra)
 - Explore architectural variations
     - Componentize the model: split it into a shared part and a local part
       where the local part depends on the shared part but not the other way round.
