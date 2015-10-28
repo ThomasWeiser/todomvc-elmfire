@@ -33,13 +33,16 @@ import ElmFire
 -- Configuration
 
 -- URL of the Firebase to use
+firebase_foreign : String
 firebase_foreign = "https://todomvc-angular.firebaseio.com/todos"
 
 -- This app uses the same data format as firebase-angular implementation.
 -- So you could use also test with their Firebase
+firebase_test : String
 firebase_test = "https://elmfire-todomvc.firebaseio.com/todos"
 
 -- But lets use our own
+firebaseUrl : String
 firebaseUrl = firebase_test
 
 -----------------------------------------------------------------------
@@ -52,6 +55,7 @@ config =
   , inputs = [Signal.map FromServer serverInput.signal]
   }
 
+app : StartApp.App Model
 app = StartApp.start config
 
 port runEffects : Signal (Task Never ())

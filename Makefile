@@ -1,30 +1,45 @@
 
-ELM_SOURCE = src/TodoMVC.elm
-ELM_BUILD = js/elm.js
+ELM_MAIN = TodoMVC
+ELM_OUTPUT = elm.js
+STATIC = index.html css
+BROWSER_TARGET = index.html
+
+SOURCE_DIR = src
+BUILD_DIR = build
 
 ###
 
-.PHONY: all new open guard clean clean-build clean-all
+ELM_SOURCE = $(SOURCE_DIR)/$(ELM_MAIN).elm
+ELM_BUILD = $(BUILD_DIR)/$(ELM_OUTPUT)
+STATIC_SOURCES = $(STATIC:%=$(SOURCE_DIR)/%)
 
-all: $(ELM_BUILD)
+###
+
+.PHONY: all open clean clean-build clean-all static elm new
+
+all: $(BUILD_DIR) $(ELM_BUILD) static
 
 new: clean-build all
 
-$(ELM_BUILD):
+$(ELM_BUILD): elm
+
+elm:
 	elm make --yes --output $(ELM_BUILD) $(ELM_SOURCE)
 
 open:
-	# xdg-open "http://localhost:63342/todomvc/todomvc-elmfire/work/" 2>/dev/null
-	xdg-open index.html 2>/dev/null
+	xdg-open $(BUILD_DIR)/$(BROWSER_TARGET) 2>/dev/null
 
-guard: all
-	bin/guard
+static: # : $(BUILD_DIR)/% : $(SOURCE_DIR)/%  $(BUILD_DIR)
+	rsync -rpE --ignore-missing-args stopgap $(STATIC_SOURCES) $(BUILD_DIR)
+
+$(BUILD_DIR):
+	mkdir $(BUILD_DIR)
 
 clean:
 	rm -rf elm-stuff
 
 clean-build:
-	rm -f $(ELM_BUILD)
+	rm -rf $(BUILD_DIR)
 	rm -rf elm-stuff/build-artifacts
 
 clean-all: clean-build clean
