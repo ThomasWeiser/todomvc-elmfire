@@ -27,6 +27,8 @@ import Effects exposing (Effects, Never)
 import StartApp
 
 import ElmFire
+import ElmFire.Dict
+import ElmFire.Op
 
 -----------------------------------------------------------------------
 
@@ -52,7 +54,7 @@ config =
   { init = (initialModel, initialEffect)
   , update = updateState
   , view = view
-  , inputs = [Signal.map FromServer serverInput.signal]
+  , inputs = [Signal.map FromServer inputItems]
   }
 
 app : StartApp.App Model
@@ -71,18 +73,19 @@ main = app.html
 --   - Local State: Filtering and editing
 
 type alias Model =
-  { items: Dict Id Item
+  { items: Items
   , filter: Filter
   , addField: Content
   , editingItem: EditingItem
   }
 
+type alias Items = Dict Id Item
 type alias Id = String
-type alias Content = String
 type alias Item =
   { title: Content
   , completed: Bool
   }
+type alias Content = String
 
 type Filter = All | Active | Completed
 
@@ -98,8 +101,8 @@ initialModel =
 
 type Action
   = FromGui GuiEvent
-  | FromServer ServerEvent
-  | FromEffect EffectEvent
+  | FromServer Items
+  | FromEffect -- no actions from effects here
 
 -----------------------------------------------------------------------
 
@@ -123,71 +126,42 @@ type alias GuiAddress = Address GuiEvent
 
 -----------------------------------------------------------------------
 
--- Events originating from firebase responses
+-- Mirror Firbase's content as the model's items
 
-type ServerEvent
-  = NoServerEvent
-  | Added (Id, Item)
-  | Changed (Id, Item)
-  | Removed Id
-
-serverInput : Mailbox ServerEvent
-serverInput = mailbox NoServerEvent
-
--- Events originating from effect (mostly firebase commands)
--- Actually there are not meanigful return values, so we have only a single value here.
-
-type EffectEvent
-  = NoEffectEvent
-
-effectInput : Mailbox EffectEvent
-effectInput = mailbox NoEffectEvent
-
------------------------------------------------------------------------
-
--- Subscribe to firebase events: adding, removing and changing items
+-- initialTask : Task Error (Task Error ())
+-- inputItems : Signal Items
+(initialTask, inputItems) =
+  ElmFire.Dict.mirror syncConfig
 
 initialEffect : Effects Action
-initialEffect =
-  let
-    snap2task : ((Id, Item) -> ServerEvent) -> ElmFire.Snapshot -> Task () ()
-    snap2task eventOp =
-      ( \snapshot ->
-        case decodeItem snapshot.value of
-          Just item ->
-            Signal.send
-              serverInput.address
-              (eventOp (snapshot.key, item))
-          Nothing -> Task.fail ()
-      )
-    doNothing = \_ -> Task.succeed ()
-    loc = (ElmFire.fromUrl firebaseUrl)
-  in
-    kickOff
-    ( ElmFire.subscribe
-        (snap2task Added) doNothing (ElmFire.childAdded ElmFire.noOrder) loc
-      `andThen`
-      \_ -> ElmFire.subscribe
-        (snap2task Changed) doNothing (ElmFire.childChanged ElmFire.noOrder) loc
-      `andThen`
-      \_ -> ElmFire.subscribe
-        (snap2task (\(id, _) -> Removed id)) doNothing (ElmFire.childRemoved ElmFire.noOrder) loc
-      `andThen`
-      \_ -> Task.succeed ()
-    )
+initialEffect = initialTask |> kickOff
 
 -----------------------------------------------------------------------
 
-decodeItem : JD.Value -> Maybe Item
-decodeItem value =
-  JD.decodeValue decoderItem value |> Result.toMaybe
+syncConfig : ElmFire.Dict.Config Item
+syncConfig =
+  { location = ElmFire.fromUrl firebaseUrl
+  , orderOptions = ElmFire.noOrder
+  , encoder =
+      \item -> JE.object
+        [ ("title", JE.string item.title)
+        , ("completed", JE.bool item.completed)
+        ]
+  , decoder =
+      ( JD.object2 Item
+          ("title" := JD.string)
+          ("completed" := JD.bool)
+      )
+  }
 
-decoderItem : JD.Decoder Item
-decoderItem =
-  ( JD.object2 Item
-      ("title" := JD.string)
-      ("completed" := JD.bool)
-  )
+-----------------------------------------------------------------------
+
+effectItems : ElmFire.Op.Operation Item -> Effects Action
+effectItems operation =
+  ElmFire.Op.operate
+    syncConfig
+    operation
+  |> kickOff
 
 -----------------------------------------------------------------------
 
@@ -196,29 +170,19 @@ decoderItem =
 {- Map any task to an effect, discarding any direct result or error value -}
 kickOff : Task x a -> Effects Action
 kickOff =
-  Task.toMaybe >> Task.map (always (FromEffect NoEffectEvent)) >> Effects.task
+  Task.toMaybe >> Task.map (always (FromEffect)) >> Effects.task
 
 updateState : Action -> Model -> (Model, Effects Action)
 updateState action model =
   case action of
 
-    FromEffect _ ->
+    FromEffect ->
       ( model
       , Effects.none
       )
 
-    FromServer (Added (id, item)) ->
-      ( { model | items <- Dict.insert id item model.items }
-      , Effects.none
-      )
-
-    FromServer (Changed (id, item)) ->
-      ( { model | items <- Dict.insert id item model.items }
-      , Effects.none
-      )
-
-    FromServer (Removed id) ->
-      ( { model | items <- Dict.remove id model.items }
+    FromServer (items) ->
+      ( { model | items <- items }
       , Effects.none
       )
 
@@ -227,14 +191,8 @@ updateState action model =
       , if model.addField == ""
         then Effects.none
         else
-          kickOff <|
-            ElmFire.set
-              ( JE.object
-                  [ ("title", JE.string model.addField)
-                  , ("completed", JE.bool False)
-                  ]
-              )
-              ( ElmFire.fromUrl firebaseUrl |> ElmFire.push )
+          effectItems <|
+            ElmFire.Op.push { title = model.addField, completed = False }
       )
 
     FromGui (UpdateItem id) ->
@@ -243,89 +201,41 @@ updateState action model =
           Just (id1, title) ->
             if (id == id1)
             then
-              kickOff <|
-                if title == ""
-                then
-                  ElmFire.remove
-                    ( ElmFire.fromUrl firebaseUrl |> ElmFire.sub id )
-                else
-                  ElmFire.update
-                    ( JE.object [ ("title", JE.string title) ] )
-                    ( ElmFire.fromUrl firebaseUrl |> ElmFire.sub id )
+              if title == ""
+              then
+                effectItems <| ElmFire.Op.remove id
+              else
+                effectItems <| ElmFire.Op.update id
+                  ( Maybe.map (\item -> { item | title <- title }) )
             else Effects.none
           _ -> Effects.none
       )
 
     FromGui (DeleteItem id) ->
       ( model
-      , kickOff <|
-          ElmFire.remove
-            ( ElmFire.fromUrl firebaseUrl |> ElmFire.sub id )
+      , effectItems <| ElmFire.Op.remove id
       )
 
     FromGui (DeleteCompletedItems) ->
       ( model
-      , Effects.batch <|
-        List.filterMap
-          ( \(key, itemFromModel) ->
-            if itemFromModel.completed
-            then
-              Just <| kickOff <| ElmFire.transaction
-                ( \maybeItem ->
-                  case maybeItem of
-                    Just itemJson ->
-                      case decodeItem itemJson of
-                        Just itemFromServer ->
-                          if itemFromServer.completed
-                          then ElmFire.Remove
-                          else ElmFire.Abort
-                        Nothing ->
-                          ElmFire.Abort
-                    Nothing ->
-                      ElmFire.Abort
-                )
-                ( ElmFire.fromUrl firebaseUrl |> ElmFire.sub key)
-                True
-            else Nothing
-          )
-          (Dict.toList model.items)
+      , effectItems <|
+          ElmFire.Op.filter ElmFire.Op.parallel
+            (\_ item -> not item.completed)
       )
 
     FromGui (CheckItem id completed) ->
       ( model
-      , kickOff <|
-          ElmFire.update
-            ( JE.object [ ("completed", JE.bool completed) ] )
-            ( ElmFire.fromUrl firebaseUrl |> ElmFire.sub id )
+      , effectItems <| ElmFire.Op.update id
+          ( Maybe.map (\item -> { item | completed <- completed }) )
       )
 
     FromGui (CheckAllItems completed) ->
       ( model
-      , Effects.batch <|
-        List.map
-          ( \key ->
-            kickOff <|
-              ElmFire.transaction
-                ( \maybeItem ->
-                  case maybeItem of
-                    Just itemJson ->
-                      case decodeItem itemJson of
-                        Just item ->
-                          ElmFire.Set
-                            ( JE.object
-                                [ ("title", JE.string item.title)
-                                , ("completed", JE.bool completed)
-                                ]
-                            )
-                        Nothing ->
-                          ElmFire.Abort
-                    Nothing ->
-                      ElmFire.Abort
-                )
-                ( ElmFire.fromUrl firebaseUrl |> ElmFire.sub key)
-                True
-          )
-          (Dict.keys model.items)
+      , effectItems <|
+          ElmFire.Op.map ElmFire.Op.parallel
+            (\_ item ->
+              { item | completed <- completed }
+            )
       )
 
     FromGui (EditExistingItem e) ->

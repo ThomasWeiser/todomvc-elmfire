@@ -7,6 +7,7 @@ extending [Evan Czaplicki's](https://twitter.com/czaplic)
 [version](https://github.com/evancz/elm-todomvc),
 using [Firebase](https://www.firebase.com/)
 via [ElmFire](https://github.com/ThomasWeiser/elmfire)
+and [elmfire-extra](https://github.com/ThomasWeiser/elmfire-extra)
 for storage and real-time collaboration.
 
 ## Build Instructions
@@ -31,13 +32,13 @@ and [evancz/elm-effects](http://package.elm-lang.org/packages/evancz/elm-effects
 A sketch of the data flow:
 
 - Inputs are coming from
-    - Firebase query results
+    - Firebase changes
     - user interaction
 - The `model` comprises two parts
-    - shared persistent state (list of items)
+    - shared persistent state, mirrored from Firebase by means of `ElmFire.Dict`
     - local state (filter settings, intermediate edit state)
 - An `update` function takes an input event and the current model, returning
-  a new model and possibly an effect, i.e. a task to change the Firebase data.
+  a new model and possibly an effect, i.e. a task to change the Firebase data (using `ElmFire.Op`).
 - A `view` function renders the current model as HTML
 
 Please note that content changes made by the user always flow through the Firebase layer.
@@ -56,8 +57,6 @@ to map these ids to the items' payload.
 
 ## Future Work
 
-- ElmFire will provide a means for [auto syncing a Dict](https://github.com/ThomasWeiser/elmfire-extra) with a Firebase object.
-  We will use it here to simplify the server interop. Beta version in branch [elmfire-extra](https://github.com/ThomasWeiser/todomvc-elmfire/tree/elmfire-extra)
 - Explore architectural variations
     - Componentize the model: split it into a shared part and a local part
       where the local part depends on the shared part but not the other way round.
