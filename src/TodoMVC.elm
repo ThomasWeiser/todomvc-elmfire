@@ -25,6 +25,7 @@ import Signal exposing (Mailbox, Address, mailbox, message)
 import Task exposing (Task, andThen)
 import Effects exposing (Effects, Never)
 import StartApp
+import String
 
 import ElmFire
 import ElmFire.Dict
@@ -188,11 +189,11 @@ updateState action model =
 
     FromGui (AddItem) ->
       ( { model | addField <- "" }
-      , if model.addField == ""
+      , if model.addField |> String.trim |> String.isEmpty
         then Effects.none
         else
           effectItems <|
-            ElmFire.Op.push { title = model.addField, completed = False }
+            ElmFire.Op.push { title = model.addField |> String.trim, completed = False }
       )
 
     FromGui (UpdateItem id) ->
