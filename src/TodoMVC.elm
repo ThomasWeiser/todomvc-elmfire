@@ -202,12 +202,12 @@ updateState action model =
           Just (id1, title) ->
             if (id == id1)
             then
-              if title == ""
+              if title |> String.trim |> String.isEmpty
               then
                 effectItems <| ElmFire.Op.remove id
               else
                 effectItems <| ElmFire.Op.update id
-                  ( Maybe.map (\item -> { item | title <- title }) )
+                  ( Maybe.map (\item -> { item | title <- title |> String.trim }) )
             else Effects.none
           _ -> Effects.none
       )
