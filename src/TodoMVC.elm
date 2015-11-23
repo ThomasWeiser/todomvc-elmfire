@@ -183,12 +183,12 @@ updateState action model =
       )
 
     FromServer (items) ->
-      ( { model | items <- items }
+      ( { model | items = items }
       , Effects.none
       )
 
     FromGui (AddItem) ->
-      ( { model | addField <- "" }
+      ( { model | addField = "" }
       , if model.addField |> String.trim |> String.isEmpty
         then Effects.none
         else
@@ -197,7 +197,7 @@ updateState action model =
       )
 
     FromGui (UpdateItem id) ->
-      ( { model | editingItem <- Nothing }
+      ( { model | editingItem = Nothing }
       , case model.editingItem of
           Just (id1, title) ->
             if (id == id1)
@@ -207,7 +207,7 @@ updateState action model =
                 effectItems <| ElmFire.Op.remove id
               else
                 effectItems <| ElmFire.Op.update id
-                  ( Maybe.map (\item -> { item | title <- title |> String.trim }) )
+                  ( Maybe.map (\item -> { item | title = title |> String.trim }) )
             else Effects.none
           _ -> Effects.none
       )
@@ -227,7 +227,7 @@ updateState action model =
     FromGui (CheckItem id completed) ->
       ( model
       , effectItems <| ElmFire.Op.update id
-          ( Maybe.map (\item -> { item | completed <- completed }) )
+          ( Maybe.map (\item -> { item | completed = completed }) )
       )
 
     FromGui (CheckAllItems completed) ->
@@ -235,12 +235,12 @@ updateState action model =
       , effectItems <|
           ElmFire.Op.map ElmFire.Op.parallel
             (\_ item ->
-              { item | completed <- completed }
+              { item | completed = completed }
             )
       )
 
     FromGui (EditExistingItem e) ->
-      ( { model | editingItem <- e }
+      ( { model | editingItem = e }
       , case e of
           Just (id, _) ->
             kickOff <| Signal.send focus.address id
@@ -248,12 +248,12 @@ updateState action model =
       )
 
     FromGui (EditAddField content) ->
-      ( { model | addField <- content }
+      ( { model | addField = content }
       , Effects.none
       )
 
     FromGui (SetFilter filter) ->
-      ( { model | filter <- filter }
+      ( { model | filter = filter }
       , Effects.none
       )
 
