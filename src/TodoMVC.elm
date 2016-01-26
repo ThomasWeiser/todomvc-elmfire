@@ -31,7 +31,7 @@ import ElmFire
 import ElmFire.Dict
 import ElmFire.Op
 
------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 -- Configuration
 
@@ -39,8 +39,8 @@ import ElmFire.Op
 firebase_foreign : String
 firebase_foreign = "https://todomvc-angular.firebaseio.com/todos"
 
--- This app uses the same data format as firebase-angular implementation.
--- So you could use also test with their Firebase
+-- This app uses the same data format as the firebase-angular implementation.
+-- So we could use also their Firebase for testing
 firebase_test : String
 firebase_test = "https://elmfire-todomvc.firebaseio.com/todos"
 
@@ -48,7 +48,7 @@ firebase_test = "https://elmfire-todomvc.firebaseio.com/todos"
 firebaseUrl : String
 firebaseUrl = firebase_test
 
------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 config : StartApp.Config Model Action
 config =
@@ -67,7 +67,7 @@ port runEffects = app.tasks
 main : Signal Html
 main = app.html
 
------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 -- The model comprises two parts:
 --   - Shared persistent state: A list of items together with their ids
@@ -103,9 +103,9 @@ initialModel =
 type Action
   = FromGui GuiEvent
   | FromServer Items
-  | FromEffect -- no actions from effects here
+  | FromEffect -- no specific actions from effects here
 
------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 -- Events originating from the user interacting with the html page
 
@@ -125,7 +125,7 @@ type GuiEvent
 
 type alias GuiAddress = Address GuiEvent
 
------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 -- Mirror Firbase's content as the model's items
 
@@ -137,7 +137,7 @@ type alias GuiAddress = Address GuiEvent
 initialEffect : Effects Action
 initialEffect = initialTask |> kickOff
 
------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 syncConfig : ElmFire.Dict.Config Item
 syncConfig =
@@ -155,7 +155,7 @@ syncConfig =
       )
   }
 
------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 effectItems : ElmFire.Op.Operation Item -> Effects Action
 effectItems operation =
@@ -164,14 +164,16 @@ effectItems operation =
     operation
   |> kickOff
 
------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
--- Process gui events and server events yielding model updates and effects
-
-{- Map any task to an effect, discarding any direct result or error value -}
+-- Map any task to an effect, discarding any direct result or error value
 kickOff : Task x a -> Effects Action
 kickOff =
   Task.toMaybe >> Task.map (always (FromEffect)) >> Effects.task
+
+--------------------------------------------------------------------------------
+
+-- Process gui events and server events yielding model updates and effects
 
 updateState : Action -> Model -> (Model, Effects Action)
 updateState action model =
@@ -182,18 +184,24 @@ updateState action model =
       , Effects.none
       )
 
-    FromServer (items) ->
+    FromServer items ->
       ( { model | items = items }
       , Effects.none
       )
 
-    FromGui (AddItem) ->
+    FromGui NoGuiEvent ->
+      ( model
+      , Effects.none
+      )
+
+    FromGui AddItem ->
       ( { model | addField = "" }
       , if model.addField |> String.trim |> String.isEmpty
         then Effects.none
         else
           effectItems <|
-            ElmFire.Op.push { title = model.addField |> String.trim, completed = False }
+            ElmFire.Op.push
+              { title = model.addField |> String.trim, completed = False }
       )
 
     FromGui (UpdateItem id) ->
@@ -207,9 +215,11 @@ updateState action model =
                 effectItems <| ElmFire.Op.remove id
               else
                 effectItems <| ElmFire.Op.update id
-                  ( Maybe.map (\item -> { item | title = title |> String.trim }) )
+                  ( Maybe.map
+                      (\item -> { item | title = title |> String.trim })
+                  )
             else Effects.none
-          _ -> Effects.none
+          Nothing -> Effects.none
       )
 
     FromGui (DeleteItem id) ->
@@ -217,7 +227,7 @@ updateState action model =
       , effectItems <| ElmFire.Op.remove id
       )
 
-    FromGui (DeleteCompletedItems) ->
+    FromGui DeleteCompletedItems ->
       ( model
       , effectItems <|
           ElmFire.Op.filter ElmFire.Op.parallel
@@ -244,7 +254,7 @@ updateState action model =
       , case e of
           Just (id, _) ->
             kickOff <| Signal.send focus.address id
-          _ -> Effects.none
+          Nothing -> Effects.none
       )
 
     FromGui (EditAddField content) ->
@@ -257,12 +267,7 @@ updateState action model =
       , Effects.none
       )
 
-    _ ->
-      ( model
-      , Effects.none
-      )
-
------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 -- Pre-calculate some values derived from model
 -- for more efficient view code
@@ -289,7 +294,7 @@ augment model =
       count = { total = itemsTotal, completed = itemsCompleted }
     }
 
------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 view : Address Action -> Model -> Html
 view actionAddress model =
@@ -358,7 +363,7 @@ viewItem guiAddress editingItem (id, item) =
   let
     isEditing = case editingItem of
       Just (id1, v) -> if id == id1 then (True, v) else (False, "")
-      _ -> (False, "")
+      Nothing -> (False, "")
   in
     li
       [ classList
@@ -377,7 +382,8 @@ viewItem guiAddress editingItem (id, item) =
               ]
               []
           , label
-              [ onDoubleClick guiAddress (EditExistingItem (Just (id, item.title))) ]
+              [ onDoubleClick guiAddress
+                  (EditExistingItem (Just (id, item.title))) ]
               [ text item.title ]
           , button
               [ class "destroy"
@@ -426,13 +432,17 @@ viewControls guiAddress model augModel =
             ]
         , li
             [ onClick guiAddress (SetFilter Active) ]
-            [ a [ href "#/active", classList [("selected", model.filter == Active)] ]
+            [ a [ href "#/active"
+                , classList [("selected", model.filter == Active)]
+                ]
                 [ text "Active" ]
             , text " "
             ]
         , li
             [ onClick guiAddress (SetFilter Completed) ]
-            [ a [ href "#/completed", classList [("selected", model.filter == Completed)] ]
+            [ a [ href "#/completed"
+                , classList [("selected", model.filter == Completed)]
+                ]
                 [ text "Completed" ]
             ]
         ]
@@ -449,19 +459,22 @@ viewInfoFooter guiAddress =
   footer [ class "info" ]
     [ p [] [ text "Double-click to edit a todo" ]
     , p [] [ text "Created by "
-           , a [ href "https://github.com/evancz" ] [ text "Evan Czaplicki" ]
+           , a [ href "https://github.com/evancz" ]
+               [ text "Evan Czaplicki" ]
            , text " and "
-           , a [ href "https://github.com/ThomasWeiser" ] [ text "Thomas Weiser" ]
+           , a [ href "https://github.com/ThomasWeiser" ]
+               [ text "Thomas Weiser" ]
            ]
     , p [] [ text "Part of "
-           , a [ href "http://todomvc.com" ] [ text "TodoMVC" ]
+           , a [ href "http://todomvc.com" ]
+               [ text "TodoMVC" ]
            ]
     , p [] [ a [ href "https://github.com/ThomasWeiser/todomvc-elmfire" ]
                [ text "Source code at GitHub" ]
            ]
     ]
 
------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 -- View helper functions
 
@@ -480,7 +493,7 @@ showBlock : Bool -> Attribute
 showBlock visible =
   style [ ("display", if visible then "block" else "none") ]
 
------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 -- Use auxiliary JS code to set the focus to double-clicked input fields
 
@@ -490,4 +503,4 @@ focus = mailbox ""
 port runFocus : Signal Id
 port runFocus = Signal.map ((++) "#todo-") focus.signal
 
------------------------------------------------------------------------
+--------------------------------------------------------------------------------
