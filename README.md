@@ -12,7 +12,7 @@ for storage and real-time collaboration.
 
 ## Build Instructions
 
-This app needs the Elm plattform version 15 or 15.1. Compile with:
+This app needs the Elm plattform version 0.16. Compile with:
 
     elm make --yes --output js/elm.js src/TodoMVC.elm
     
