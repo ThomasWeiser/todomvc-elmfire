@@ -1,4 +1,4 @@
-# TodoMVC in Elm + ElmFire • [Demo](http://thomasweiser.github.io/todomvc-elmfire/)
+# TodoMVC in Elm + ElmFire • [Demo](https://thomasweiser.github.io/todomvc-elmfire/)
 
 [TodoMVC](http://todomvc.com/)
 implemented in
